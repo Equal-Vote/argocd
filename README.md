@@ -6,7 +6,8 @@ Installing ArgoCD in the cluster via Helm:
 
 ```
 helm repo add argo https://argoproj.github.io/argo-helm
-helm install argocd argo/argo-cd --version 5.51.6 -f argocd.yaml 
+k create ns argocd
+helm install argocd argo/argo-cd --namespace argocd --version 5.51.6 -f argocd.yaml 
 ```
 
 Use `helm status my-argo-cd` to get details on accessing the UI.
