@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: matomo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: matomo
+    repoURL: https://charts.bitnami.com/bitnami
+    targetRevision: 3.2.2
+    helm:
+      releaseName: matomo
+      valueFiles:
+      - matomo.values.yaml
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: matomo
