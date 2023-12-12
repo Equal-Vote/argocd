@@ -4,10 +4,10 @@ metadata:
   name: bootstrap
 spec:
   destination:
-    name: https://kubernetes.default.svc
+    server: https://kubernetes.default.svc
     namespace: argocd
   source:
     path: apps
-    repoURL: https://github.com/Equal-Vote/argocd.github
+    repoURL: https://github.com/Equal-Vote/argocd.git
     targetRevision: HEAD
   project: default
