@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: matomo
   namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
@@ -11,8 +13,9 @@ spec:
     targetRevision: 3.2.2
     helm:
       releaseName: matomo
-      valueFiles:
-      - ./matomo.values.yaml
+      values: |
+        ingress:
+          enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: matomo

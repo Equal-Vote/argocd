@@ -1,11 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: bootstrapper
+  name: bootstrap-cluster
+  namespace: argocd
 spec:
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    namespace: default
   source:
     path: apps
     repoURL: https://github.com/Equal-Vote/argocd.git
