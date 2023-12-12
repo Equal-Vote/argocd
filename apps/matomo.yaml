@@ -12,7 +12,7 @@ spec:
     helm:
       releaseName: matomo
       valueFiles:
-      - matomo.values.yaml
+      - ./matomo.values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: matomo
