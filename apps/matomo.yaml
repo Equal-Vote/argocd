@@ -14,11 +14,10 @@ spec:
       valueFiles:
       - matomo.values.yaml
   destination:
-    server: "https://kubernetes.default.svc"
+    server: https://kubernetes.default.svc
     namespace: matomo
   syncPolicy:
     syncOptions:
-    - ApplyOutOfSyncOnly=true
     - CreateNamespace=true
     automated:
       selfHeal: true
