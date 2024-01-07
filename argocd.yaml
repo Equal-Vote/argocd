@@ -1,5 +1,6 @@
 server:
   ingress:
     enabled: true
+    ingressClassName: "nginx"
     hosts:
-    - argocd.equal.vote
+    - "argocd.equal.vote"
