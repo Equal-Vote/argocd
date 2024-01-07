@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+spec:
+  project: default
+  source:
+    chart: ingress-nginx
+    repoURL: https://kubernetes.github.io/ingress-nginx
+    targetRevision: 4.9.0
+    helm:
+      releaseName: ingress-nginx
+        #values: |
+        #  installCRDs: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress-nginx
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
