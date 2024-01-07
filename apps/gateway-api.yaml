@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/kubernetes-sigs/gateway-api.git
-    targetRevision: v1.0.0
+    targetRevision: HEAD
     path: releases/download/v1.0.0/standard-install.yaml
   destination:
     server: https://kubernetes.default.svc
