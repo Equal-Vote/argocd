@@ -13,6 +13,8 @@ spec:
     helm:
       releaseName: external-dns
       values: |
+        domainFilters:
+        - sandbox.star.vote
         serviceAccount:
           annotations:
             azure.workload.identity/client-id: 747dcea4-b636-4456-8103-95e3335192f4
