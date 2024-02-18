@@ -13,6 +13,11 @@ spec:
     helm:
       releaseName: external-dns
       values: |
+        serviceAccount:
+          annotations:
+            azure.workload.identity/client-id: 747dcea4-b636-4456-8103-95e3335192f4
+        podLabels:
+          azure.workload.identity/use: "true"
         provider: azure
         secretConfiguration:
           enabled: true
