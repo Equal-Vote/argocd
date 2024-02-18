@@ -22,7 +22,7 @@ argocd login --insecure localhost:8080
 #argocd repo add https://github.com/Equal-Vote/argocd.git #--insecure-skip-server-verification
 ```
 
-# Creating Service Principal for external-dns
+# Delete all this crap: Creating Service Principal for external-dns
 
 https://kubernetes-sigs.github.io/external-dns/v0.14.0/tutorials/azure/#service-principal
 
@@ -45,4 +45,35 @@ cat <<-EOF > azure.json
   "aadClientSecret": "$EXTERNALDNS_SP_PASSWORD"
 }
 EOF
+kubectl create ns external-dns
+kubectl create secret generic azure-config-file --namespace external-dns --from-file azure.json
+```
+
+# Set up Azure Managed Workload Identity for external-dns
+
+https://kubernetes-sigs.github.io/external-dns/v0.14.0/tutorials/azure/#managed-identity-using-workload-identity
+
+```
+AZURE_AKS_RESOURCE_GROUP="equalvote"
+AZURE_AKS_CLUSTER_NAME="equalvote"
+az aks update --resource-group ${AZURE_AKS_RESOURCE_GROUP} --name ${AZURE_AKS_CLUSTER_NAME} --enable-oidc-issuer --enable-workload-identity
+
+IDENTITY_RESOURCE_GROUP=$AZURE_AKS_RESOURCE_GROUP
+IDENTITY_NAME="equalvote-identity"
+az identity create --resource-group "${IDENTITY_RESOURCE_GROUP}" --name "${IDENTITY_NAME}"
+
+AZURE_DNS_ZONE_RESOURCE_GROUP="equalvote"
+AZURE_DNS_ZONE="sandbox.star.vote"
+IDENTITY_CLIENT_ID=$(az identity show --resource-group "${IDENTITY_RESOURCE_GROUP}" \
+  --name "${IDENTITY_NAME}" --query "clientId" --output tsv)
+DNS_ID=$(az network dns zone show --name "${AZURE_DNS_ZONE}" \
+  --resource-group "${AZURE_DNS_ZONE_RESOURCE_GROUP}" --query "id" --output tsv)
+RESOURCE_GROUP_ID=$(az group show --name "${AZURE_DNS_ZONE_RESOURCE_GROUP}" --query "id" --output tsv)
+az role assignment create --role "DNS Zone Contributor" \
+  --assignee "${IDENTITY_CLIENT_ID}" --scope "${DNS_ID}"
+az role assignment create --role "Reader" \
+  --assignee "${IDENTITY_CLIENT_ID}" --scope "${RESOURCE_GROUP_ID}"
+
+OIDC_ISSUER_URL="$(az aks show -n equalvote -g equalvote --query "oidcIssuerProfile.issuerUrl" -otsv)"
+az identity federated-credential create --name ${IDENTITY_NAME} --identity-name ${IDENTITY_NAME} --resource-group ${AZURE_AKS_RESOURCE_GROUP} --issuer "$OIDC_ISSUER_URL" --subject "system:serviceaccount:external-dns:external-dns"
 ```
