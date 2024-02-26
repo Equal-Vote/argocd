@@ -11,6 +11,10 @@ spec:
     targetRevision: 4.9.0
     helm:
       releaseName: ingress-nginx
+      values: |
+        controller:
+          ingressClassResource:
+            default: true
   destination:
     server: https://kubernetes.default.svc
     namespace: ingress-nginx
