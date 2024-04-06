@@ -15,8 +15,8 @@ Use `helm status my-argo-cd` to get details on accessing the UI.
 
 ```
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
-kubectl port-forward service/argocd-server -n argocd 8080:443 &
-argocd login --insecure localhost:8080
+kubectl port-forward service/argocd-server -n argocd 8080:443 > /dev/null 2> /dev/null &
+argocd login --insecure localhost:8080 # <- this part is optional, you can also open localhost manually
 
 # We used application.yaml to deploy this instead of this command:
 #argocd repo add https://github.com/Equal-Vote/argocd.git #--insecure-skip-server-verification
