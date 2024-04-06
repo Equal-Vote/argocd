@@ -22,6 +22,8 @@ argocd login --insecure localhost:8080
 #argocd repo add https://github.com/Equal-Vote/argocd.git #--insecure-skip-server-verification
 ```
 
+Username is admin
+
 # Delete all this crap: Creating Service Principal for external-dns
 
 https://kubernetes-sigs.github.io/external-dns/v0.14.0/tutorials/azure/#service-principal
