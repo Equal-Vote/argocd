@@ -86,6 +86,8 @@ az identity federated-credential create --name ${IDENTITY_NAME} --identity-name 
 export AZURE_DEFAULTS_GROUP=equalvote
 export DOMAIN_NAME=sandbox.star.vote
 export CLUSTER=equalvote
+export EMAIL_ADDRESS=gmail@evanstucker.com
+export AZURE_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
 export IDENTITY_NAME=cert-manager
 az identity create --name "${IDENTITY_NAME}" -g $AZURE_DEFAULTS_GROUP
@@ -108,8 +110,6 @@ az identity federated-credential create \
 Create the clusterissuer:
 
 ```
-
-
-
+cat clusterissuer.template.txt | envsubst > clusterissuer.yaml
 k apply -f clusterissuer.yaml
 ```
