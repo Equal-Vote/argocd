@@ -1,0 +1,28 @@
+# https://artifacthub.io/packages/helm/bitnami/evanstest-nginx
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: evanstest-nginx
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: nginx
+    repoURL: https://charts.bitnami.com/bitnami
+    targetRevision: 16.0.1
+    helm:
+      releaseName: nginx
+      values: |
+        ingress:
+          enabled: true
+          hostname: evanstest.sandbox.star.vote
+          tls: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: evanstest
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
