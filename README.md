@@ -79,3 +79,37 @@ az role assignment create --role "Reader" \
 OIDC_ISSUER_URL="$(az aks show -n equalvote -g equalvote --query "oidcIssuerProfile.issuerUrl" -otsv)"
 az identity federated-credential create --name ${IDENTITY_NAME} --identity-name ${IDENTITY_NAME} --resource-group ${AZURE_AKS_RESOURCE_GROUP} --issuer "$OIDC_ISSUER_URL" --subject "system:serviceaccount:external-dns:external-dns"
 ```
+
+# Set up Azure Managed Identity for cert-manager
+
+```
+export AZURE_DEFAULTS_GROUP=equalvote
+export DOMAIN_NAME=sandbox.star.vote
+export CLUSTER=equalvote
+
+export IDENTITY_NAME=cert-manager
+az identity create --name "${IDENTITY_NAME}" -g $AZURE_DEFAULTS_GROUP
+export IDENTITY_CLIENT_ID=$(az identity show --name "${IDENTITY_NAME}" --query 'clientId' -o tsv -g $AZURE_DEFAULTS_GROUP)
+az role assignment create \
+    --role "DNS Zone Contributor" \
+    --assignee $IDENTITY_CLIENT_ID \
+    --scope $(az network dns zone show --name $DOMAIN_NAME -o tsv --query id -g $AZURE_DEFAULTS_GROUP)
+
+export SERVICE_ACCOUNT_NAME=cert-manager
+export SERVICE_ACCOUNT_NAMESPACE=cert-manager
+export SERVICE_ACCOUNT_ISSUER=$(az aks show --resource-group $AZURE_DEFAULTS_GROUP --name $CLUSTER --query "oidcIssuerProfile.issuerUrl" -o tsv)
+az identity federated-credential create \
+  --name "cert-manager" \
+  --identity-name "${IDENTITY_NAME}" \
+  --issuer "${SERVICE_ACCOUNT_ISSUER}" \
+  --subject "system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}"
+```
+
+Create the clusterissuer:
+
+```
+
+
+
+k apply -f clusterissuer.yaml
+```
