@@ -9,6 +9,11 @@ server:
     ingressClassName: "nginx"
     hosts:
     - "argocd.sandbox.star.vote"
+    tls:
+    - secretName: your-certificate-name
+      hosts:
+      - "argocd.sandbox.star.vote"
+    https: true
 
 repoServer:
   # Use init containers to configure custom tooling
