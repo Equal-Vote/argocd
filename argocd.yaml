@@ -10,7 +10,7 @@ server:
     hosts:
     - "argocd.sandbox.star.vote"
     tls:
-    - secretName: your-certificate-name
+    - secretName: argocd-tls
       hosts:
       - "argocd.sandbox.star.vote"
     https: true
