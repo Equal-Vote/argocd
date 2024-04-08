@@ -1,3 +1,5 @@
+# https://cert-manager.io/docs/configuration/acme/dns01/azuredns/#managed-identity-using-aad-pod-identity
+
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -13,6 +15,11 @@ spec:
       releaseName: cert-manager
       values: |
         installCRDs: true
+        podLabels:
+          azure.workload.identity/use: "true"
+        serviceAccount:
+          labels:
+            azure.workload.identity/use: "true"
   destination:
     server: https://kubernetes.default.svc
     namespace: cert-manager
