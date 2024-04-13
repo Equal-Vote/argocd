@@ -16,7 +16,7 @@ spec:
           ingressClassResource:
             default: true
           replicaCount: 2
-        service:
+          service:
             annotations:
 
               # Fucking Azure. Took me forever to find this. See https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx
