@@ -5,7 +5,7 @@ server:
   config:
     kustomize.buildOptions: "--enable-alpha-plugins --enable-exec"
   ingress:
-    enabled: true
+    enabled: false
     ingressClassName: "nginx"
     hosts:
     - "argocd.sandbox.star.vote"
