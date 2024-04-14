@@ -14,8 +14,10 @@ spec:
       values: |
         controller:
           service:
-            annotations:
-              service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+            internal:
+              enabled: true
+              annotations:
+                service.beta.kubernetes.io/azure-load-balancer-internal: "true"
           ingressClassResource:
             default: true
           replicaCount: 2
