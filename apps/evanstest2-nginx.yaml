@@ -1,8 +1,8 @@
-# https://artifacthub.io/packages/helm/bitnami/evanstest-nginx
+# https://artifacthub.io/packages/helm/bitnami/nginx
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: evanstest-nginx
+  name: evanstest2-nginx
   namespace: argocd
 spec:
   project: default
@@ -17,7 +17,7 @@ spec:
           annotations:
             cert-manager.io/cluster-issuer: letsencrypt-staging
           enabled: true
-          hostname: evanstest.sandbox.star.vote
+          hostname: evanstest2.sandbox.star.vote
           tls: true
   destination:
     server: https://kubernetes.default.svc
