@@ -1,19 +1,23 @@
 # Based on https://github.com/viaduct-ai/kustomize-sops?tab=readme-ov-file#argo-cd-helm-chart-with-custom-tooling to enable KSOPS
 
 # Enable Kustomize Alpha Plugins via Argo CD ConfigMap, required for ksops
+configs:
+  params:
+    applicationsetcontroller.enable.progressive.syncs: true
+
 server:
   config:
     kustomize.buildOptions: "--enable-alpha-plugins --enable-exec"
   ingress:
-    enabled: false
+    enabled: true
     ingressClassName: "nginx"
-    hosts:
-    - "argocd.sandbox.star.vote"
-    tls:
-    - secretName: argocd-tls
-      hosts:
-      - "argocd.sandbox.star.vote"
-    https: true
+    hostname: "argocd.sandbox.star.vote"
+    tls: true
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-staging"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: true
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      external-dns.alpha.kubernetes.io/hostname: "argocd.sandbox.star.vote"
 
 repoServer:
   # Use init containers to configure custom tooling
