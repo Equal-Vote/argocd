@@ -14,10 +14,7 @@ spec:
       values: |
         controller:
           service:
-            internal:
-              enabled: true
-              annotations:
-                service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+            externalTrafficPolicy: "Local"
           ingressClassResource:
             default: true
           replicaCount: 2
