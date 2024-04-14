@@ -13,6 +13,8 @@ spec:
       releaseName: ingress-nginx
       values: |
         controller:
+          # Newer charts seem to establish externalTrafficPolicy to Cluster instead of Local, breaks in Azure
+          # https://github.com/kubernetes/ingress-nginx/issues/10863
           service:
             externalTrafficPolicy: "Local"
           ingressClassResource:
