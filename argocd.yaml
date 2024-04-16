@@ -18,6 +18,9 @@ server:
       external-dns.alpha.kubernetes.io/hostname: "argocd.sandbox.star.vote"
 
 repoServer:
+  podLabels:
+    azure.workload.identity/use: "true"
+
   env:
     - name: XDG_CONFIG_HOME
       value: /.config
