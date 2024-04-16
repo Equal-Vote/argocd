@@ -23,6 +23,8 @@ metadata:
   annotations:
     azure.workload.identity/client-id: ${IDENTITY_CLIENT_ID}
     azure.workload.identity/tenant-id: ${IDENTITY_TENANT_ID}
+  labels:
+     azure.workload.identity/use: "true"
   name: aks-argocd
   namespace: argocd
 EOF
