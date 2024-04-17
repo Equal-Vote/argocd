@@ -1,0 +1,19 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "cert-manager"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "cert-manager",
+        "chartName": "cert-manager",
+        "chartURL": "https://charts.jetstack.io",
+        "revision": "1.14.4",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "initial"
+    }
+}
+

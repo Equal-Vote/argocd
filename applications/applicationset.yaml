@@ -1,0 +1,56 @@
+apiVersion: "argoproj.io/v1alpha1"
+kind: "ApplicationSet"
+metadata:
+  name: "applications"
+spec:
+  generators:
+    - git:
+        repoURL: "https://github.com/Equal-Vote/argocd.git"
+        revision: "HEAD"
+        files:
+          - path: "applications/**/config.json"
+  strategy:
+    type: "RollingSync"
+    rollingSync:
+      steps:
+        - matchExpressions:
+            - key: "phase"
+              operator: "In"
+              values:
+                - "initial"
+        - matchExpressions:
+            - key: "phase"
+              operator: "In"
+              values:
+                - "core"
+        - matchExpressions:
+            - key: "phase"
+              operator: "In"
+              values:
+                - "post"
+  template:
+    metadata:
+      name: "{{application.name}}"
+      labels:
+        phase: "{{application.phase}}"
+    spec:
+      project: "{{argocd.project}}"
+      sources:
+        - repoURL: "{{application.chartURL}}"
+          targetRevision: "{{application.revision}}"
+          chart: "{{application.chartName}}"
+          helm:
+            valueFiles:
+            - "$values/applications/{{application.name}}/values.yaml"
+        - repoURL: "{{application.valuesURL}}"
+          ref: "values"
+          targetRevision: "{{application.valuesRevision}}"
+      destination:
+        name: "{{cluster.name}}"
+        namespace: "{{cluster.namespace}}"
+      syncPolicy:
+        automated: 
+          selfHeal: true
+          prune: true
+        syncOptions:
+          - CreateNamespace=true

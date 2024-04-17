@@ -1,0 +1,19 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "external-dns"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "external-dns",
+        "chartName": "external-dns",
+        "chartURL": "https://kubernetes-sigs.github.io/external-dns",
+        "revision": "1.14.4",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "initial"
+    }
+}
+

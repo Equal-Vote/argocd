@@ -1,0 +1,19 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "keycloak"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "keycloak",
+        "chartName": "keycloak",
+        "chartURL": "https://charts.bitnami.com/bitnami",
+        "revision": "18.7.1",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "post"
+    }
+}
+
