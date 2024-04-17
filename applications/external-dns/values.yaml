@@ -1,0 +1,19 @@
+domainFilters:
+  - sandbox.star.vote
+policy: sync
+serviceAccount:
+  annotations:
+    azure.workload.identity/client-id: 747dcea4-b636-4456-8103-95e3335192f4
+podLabels:
+  azure.workload.identity/use: "true"
+provider: azure
+secretConfiguration:
+  enabled: true
+  mountPath: "/etc/kubernetes/"
+  data:
+    azure.json: |
+      {
+        "subscriptionId": "86f3145a-48cc-4255-8757-dd3104d15e57",
+        "resourceGroup": "equalvote",
+        "useWorkloadIdentityExtension": true
+      }

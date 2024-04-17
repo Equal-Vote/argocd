@@ -1,0 +1,19 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "ingress-nginx"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "ingress-nginx",
+        "chartName": "ingress-nginx",
+        "chartURL": "https://kubernetes.github.io/ingress-nginx",
+        "revision": "4.10.0",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "initial"
+    }
+}
+
