@@ -1,4 +1,5 @@
 auth:
+  adminUser: "admin"
   existingSecret: "keycloak"
 
 production: true
