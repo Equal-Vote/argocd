@@ -1,1 +1,12 @@
 replicaCount: 0
+
+ingress:
+  enabled: true
+  hostname: "matomo.sandbox.star.vote"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  servicePort: "https"
+  tls: true
+
+
