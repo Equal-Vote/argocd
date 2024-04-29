@@ -1,5 +1,3 @@
-replicaCount: 0
-
 ingress:
   enabled: true
   hostname: "matomo.sandbox.star.vote"
@@ -9,4 +7,117 @@ ingress:
   servicePort: "https"
   tls: true
 
+## @param replicaCount Number of Matomo Pods to run (requires ReadWriteMany PVC support)
+##
+replicaCount: 1
+
+## @param matomoUsername User of the application
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/matomo#configuration
+##
+matomoUsername: user
+## @param matomoPassword Application password
+## Defaults to a random 10-character alphanumeric string if not set
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/matomo#configuration
+##
+matomoPassword: ""
+## @param matomoEmail Admin email
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/matomo#configuration
+##
+matomoEmail: user@example.com
+## @param matomoWebsiteName Matomo application name
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/matomo#configuration
+##
+matomoWebsiteName: example
+## @param matomoWebsiteHost Matomo application host
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/matomo#configuration
+##
+matomoWebsiteHost: https://example.org
+
+## @param matomoSkipInstall Skip Matomo installation wizard. Useful for migrations and restoring from SQL dump
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/matomo#configuration
+##
+matomoSkipInstall: false
+
+## @param allowEmptyPassword Allow DB blank passwords
+## ref: https://github.com/bitnami/containers/tree/main/bitnami/matomo#environment-variables
+##
+allowEmptyPassword: true
+
+## @section Database parameters
+##
+
+## MariaDB chart configuration
+## https://github.com/bitnami/charts/blob/main/bitnami/mariadb/values.yaml
+##
+mariadb:
+  ## @param mariadb.enabled Whether to deploy a mariadb server to satisfy the applications database requirements
+  ## To use an external database set this to false and configure the externalDatabase parameters
+  ##
+  enabled: true
+  ## @param mariadb.architecture MariaDB architecture (`standalone` or `replication`)
+  ##
+  architecture: standalone
+  ## MariaDB Authentication parameters
+  ## @param mariadb.auth.rootPassword Password for the MariaDB `root` user
+  ## @param mariadb.auth.database Database name to create
+  ## @param mariadb.auth.username Database user to create
+  ## @param mariadb.auth.password Password for the database
+  ##
+  auth:
+    ## ref: https://github.com/bitnami/containers/tree/main/bitnami/mariadb#setting-the-root-password-on-first-run
+    ##
+    rootPassword: ""
+    ## ref: https://github.com/bitnami/containers/blob/main/bitnami/mariadb/README.md#creating-a-database-on-first-run
+    ##
+    database: bitnami_matomo
+    ## ref: https://github.com/bitnami/containers/blob/main/bitnami/mariadb/README.md#creating-a-database-user-on-first-run
+    ##
+    username: bn_matomo
+    password: ""
+  primary:
+    ## Enable persistence using Persistent Volume Claims
+    ## ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+    ## @param mariadb.primary.persistence.enabled Enable database persistence using PVC
+    ## @param mariadb.primary.persistence.storageClass MariaDB primary persistent volume storage Class
+    ## @param mariadb.primary.persistence.accessModes Database Persistent Volume Access Modes
+    ## @param mariadb.primary.persistence.size Database Persistent Volume Size
+    ## @param mariadb.primary.persistence.hostPath Set path in case you want to use local host path volumes (not recommended in production)
+    ## @param mariadb.primary.persistence.existingClaim Name of an existing `PersistentVolumeClaim` for MariaDB primary replicas
+    ##
+    persistence:
+      enabled: true
+      ## mariadb data Persistent Volume Storage Class
+      ## If defined, storageClassName: <storageClass>
+      ## If set to "-", storageClassName: "", which disables dynamic provisioning
+      ## If undefined (the default) or set to null, no storageClassName spec is
+      ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+      ##   GKE, AWS & OpenStack)
+      ##
+      storageClass: ""
+      accessModes:
+        - ReadWriteOnce
+      size: 8Gi
+      hostPath: ""
+      existingClaim: ""
+    ## MariaDB primary container's resource requests and limits
+    ## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
+    ## We usually recommend not to specify default resources and to leave this as a conscious
+    ## choice for the user. This also increases chances charts run on environments with little
+    ## resources, such as Minikube. If you do want to specify resources, uncomment the following
+    ## lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    ## @param mariadb.primary.resourcesPreset Set container resources according to one common preset (allowed values: none, nano, small, medium, large, xlarge, 2xlarge). This is ignored if primary.resources is set (primary.resources is recommended for production).
+    ## More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
+    ##
+    resourcesPreset: "micro"
+    ## @param mariadb.primary.resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
+    ## Example:
+    ## resources:
+    ##   requests:
+    ##     cpu: 2
+    ##     memory: 512Mi
+    ##   limits:
+    ##     cpu: 3
+    ##     memory: 1024Mi
+    ##
+    resources: {}
 
