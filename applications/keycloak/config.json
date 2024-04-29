@@ -10,7 +10,7 @@
         "name": "keycloak",
         "chartName": "keycloak",
         "chartURL": "https://charts.bitnami.com/bitnami",
-        "revision": "21.0.0",
+        "revision": "21.0.3",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
         "valuesRevision": "HEAD",
         "phase": "post"
