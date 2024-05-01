@@ -1,0 +1,19 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "matomo"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "matomo",
+        "chartName": "matomo",
+        "chartURL": "https://charts.bitnami.com/bitnami",
+        "revision": "7.0.3",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "post"
+    }
+}
+
