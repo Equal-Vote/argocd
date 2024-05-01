@@ -135,6 +135,8 @@ mariadb:
 cronjobs:
   archive:
     enabled: false
+  taskScheduler:
+    enabled: false
 
 # Trying things: https://github.com/bitnami/charts/issues/14853#issuecomment-1438679751
 volumePermissions:
