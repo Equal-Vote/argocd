@@ -13,18 +13,14 @@ replicaCount: 1
 
 tls: true
 
-## Enable persistence using Persistent Volume Claims
-## ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
-##
 persistence:
-  ## @param persistence.accessModes PVC Access Mode for Matomo volume
-  ## Requires persistence.enabled: true
-  ## If defined, PVC must be created manually before volume will be bound
-  ##
+
+  # This guy knows what's up: https://github.com/bitnami/charts/issues/20676#issuecomment-1852667829
+  enabled: false
+
   accessModes:
     - ReadWriteMany
   storageClass: "azurefile"
-
 
 ## @param matomoUsername User of the application
 ## ref: https://github.com/bitnami/containers/tree/main/bitnami/matomo#configuration
