@@ -16,14 +16,12 @@ export action="${2}"
 
 if [[ "${action}" == "disable" ]]; then
   mkdir -p ${SCRIPT_DIR}/applications-disabled/
-  mv "${SCRIPT_DIR}/applications/${app}" ${SCRIPT_DIR}/applications-disabled/
-  git add "${SCRIPT_DIR}/applications-disabled/${app}/"
+  git mv "${SCRIPT_DIR}/applications/${app}" ${SCRIPT_DIR}/applications-disabled/
   git commit -m "Disabling ${app}"
   git push
   kubectl delete ns "${app}"
 else
-  mv "${SCRIPT_DIR}/applications-disabled/${app}" ${SCRIPT_DIR}/applications/
-  git add "${SCRIPT_DIR}/applications/${app}/"
+  git mv "${SCRIPT_DIR}/applications-disabled/${app}" ${SCRIPT_DIR}/applications/
   git commit -m "Enabling ${app}"
   git push
 fi 
