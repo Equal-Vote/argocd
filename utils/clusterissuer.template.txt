@@ -1,0 +1,25 @@
+# cert-managers documentation is getting worse. The letsencrypt-prod ClusterIssuer example is buried here:
+# https://cert-manager.io/docs/tutorials/acme/pomerium-ingress/#configure-lets-encrypt-issuer
+
+# Azure DNS example is here:
+# https://cert-manager.io/docs/configuration/acme/dns01/azuredns/#configure-a-clusterissuer
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: $EMAIL_ADDRESS
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - dns01:
+        azureDNS:
+          hostedZoneName: $DOMAIN_NAME
+          resourceGroupName: $AZURE_DEFAULTS_GROUP
+          subscriptionID: $AZURE_SUBSCRIPTION_ID
+          environment: AzurePublicCloud
+          managedIdentity:
+            clientID: $IDENTITY_CLIENT_ID
