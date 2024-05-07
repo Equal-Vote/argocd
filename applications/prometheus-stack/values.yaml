@@ -4,7 +4,7 @@ alertmanager:
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/auth-type: "basic"
-      nginx.ingress.kubernetes.io/auth-secret: "alertmanager-auth"
+        #nginx.ingress.kubernetes.io/auth-secret: "alertmanager-auth"
       nginx.ingress.kubernetes.io/auth-realm: "Authentication Required "
     hosts:
     - alertmanager.sandbox.star.vote
@@ -19,7 +19,7 @@ prometheus:
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/auth-type: "basic"
-      nginx.ingress.kubernetes.io/auth-secret: "prometheus-auth"
+        #nginx.ingress.kubernetes.io/auth-secret: "prometheus-auth"
       nginx.ingress.kubernetes.io/auth-realm: "Authentication Required "
     hosts:
     - prometheus.sandbox.star.vote
