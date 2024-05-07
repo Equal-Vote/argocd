@@ -1,0 +1,18 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "starvote"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "postgresql",
+        "chartName": "postgresql",
+        "chartURL": "https://charts.bitnami.com/bitnami",
+        "revision": "15.2.9",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "post"
+    }
+}
