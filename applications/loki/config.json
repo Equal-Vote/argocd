@@ -1,0 +1,18 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "monitoring"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "loki",
+        "chartName": "loki-stack",
+        "chartURL": "https://grafana.github.io/helm-charts",
+        "revision": "2.10.2",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "core"
+    }
+}
