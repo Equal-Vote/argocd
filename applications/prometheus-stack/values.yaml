@@ -1,0 +1,41 @@
+alertmanager:
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/auth-type: "basic"
+      nginx.ingress.kubernetes.io/auth-secret: "alertmanager-auth"
+      nginx.ingress.kubernetes.io/auth-realm: "Authentication Required "
+    hosts:
+    - alertmanager.sandbox.star.vote
+    tls:
+    - secretName: alertmanager-tls
+      hosts:
+      - alertmanager.sandbox.star.vote
+
+prometheus:
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/auth-type: "basic"
+      nginx.ingress.kubernetes.io/auth-secret: "prometheus-auth"
+      nginx.ingress.kubernetes.io/auth-realm: "Authentication Required "
+    hosts:
+    - prometheus.sandbox.star.vote
+    tls:
+    - secretName: prometheus-tls
+      hosts:
+      - prometheus.sandbox.star.vote
+
+grafana:
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    hosts:
+    - grafana.sandbox.star.vote
+    tls:
+    - secretName: grafana-tls
+      hosts:
+      - grafana.sandbox.star.vote

@@ -1,0 +1,18 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "monitoring"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "prometheus-stack",
+        "chartName": "kube-prometheus-stack",
+        "chartURL": "https://prometheus-community.github.io/helm-charts",
+        "revision": "58.4.0",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "post"
+    }
+}
