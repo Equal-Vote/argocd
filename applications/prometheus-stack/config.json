@@ -13,6 +13,6 @@
         "revision": "58.4.0",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
         "valuesRevision": "HEAD",
-        "phase": "post"
+        "phase": "core"
     }
 }
