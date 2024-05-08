@@ -54,3 +54,5 @@ spec:
           prune: true
         syncOptions:
           - CreateNamespace=true
+          # This is fix this error: https://foxutech.medium.com/how-to-fix-too-long-must-have-at-most-262144-bytes-in-argocd-2a00cddbbe99
+          - ServerSideApply=true
