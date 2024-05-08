@@ -7,7 +7,7 @@
         "project": "default"
     },
     "application": {
-        "name": "prometheus-stack",
+        "name": "kube-prometheus-stack",
         "chartName": "kube-prometheus-stack",
         "chartURL": "https://prometheus-community.github.io/helm-charts",
         "revision": "58.4.0",
