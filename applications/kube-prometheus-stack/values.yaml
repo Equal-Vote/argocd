@@ -46,13 +46,9 @@ prometheus:
 
 grafana:
   additionalDataSources:
-  - access: proxy
-    isDefault: false
-    name: loki
-    orgId: 1
+  - name: loki
     type: loki
     url: http://loki:3100
-    version: 1
   ingress:
     enabled: true
     annotations:
