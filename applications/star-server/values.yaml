@@ -1,0 +1,72 @@
+image:
+  repository: ghcr.io/equal-vote/star-server
+  tag: "sha-3123a85"
+ingress:
+  enabled: true
+  annotations:
+    # kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: star.sandbox.star.vote
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: star-server-tls
+      hosts:
+        - star.sandbox.star.vote
+env:
+  - name: ALLOWED_URLS
+    value: "http://localhost:3000/"
+  - name: DEV_DATABASE
+    value: "TRUE"
+  - name: KEYCLOAK_PUBLIC_KEY
+    value: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1pykfFHROSZY8/Q2071vAaplb4uBrj+Ei5uVVYwyhtSuJNKIhpIXukcfAAud/Qq35/a6kZoLCn5DyPZFhuq6nqyen0w9Kwjy91Oc1VR/hRPRPAWdCv5LfsS7/3nuN9O8cUCpkZG16CD92JtmEYNXd6LvFooDa4MNMDk3jOxRRVgFzzbGvq7WUkDySN/9pxsQ2OsmoWNvswIM5LMbyKCyP+F8F10wuOwFcon5PWK8MJ5ob/BDeUqTuyS6TwNst2Ui6Tf2WhC4x7V7+RxSnP5oxjpP4K7cWoCExDcOUY33ZQM7Z9zbs0B0XC9f0Ev9JNKHDhtAyKvg6DrMGlyTyLyLXQIDAQAB"
+  - name: KEYCLOAK_URL
+    value: "https://auth.star.vote:8443/realms/STARVotingDev/protocol/openid-connect"
+  - name: S3_ID
+    value: "AKIA4DAHQS5EADVYNTUP"
+  - name: REACT_APP_FF_ELECTION_ROLES
+    value: "false"
+  - name: REACT_APP_FF_METHOD_STAR_PR
+    value: "true"
+  - name: REACT_APP_FF_METHOD_RANKED_ROBIN
+    value: "false"
+  - name: REACT_APP_FF_METHOD_APPROVAL
+    value: "false"
+  - name: REACT_APP_FF_METHOD_RANKED_CHOICE
+    value: "false"
+  - name: REACT_APP_FF_CANDIDATE_DETAILS
+    value: "false"
+  - name: REACT_APP_FF_CANDIDATE_PHOTOS
+    value: "false"
+  - name: REACT_APP_FF_PRECINCTS
+    value: "false"
+  - name: REACT_APP_FF_MULTI_RACE
+    value: "false"
+  - name: REACT_APP_FF_MULTI_WINNER
+    value: "true"
+  - name: REACT_APP_FF_CUSTOM_REGISTRATION
+    value: "false"
+  - name: REACT_APP_FF_VOTER_FLAGGING
+    value: "false"
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: star-server
+        key: DATABASE_URL
+  - name: SENDGRID_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: star-server
+        key: SENDGRID_API_KEY
+  - name: KEYCLOAK_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: star-server
+        key: KEYCLOAK_SECRET
+  - name: S3_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: star-server
+        key: S3_SECRET
