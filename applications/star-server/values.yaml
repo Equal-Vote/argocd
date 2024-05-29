@@ -69,3 +69,9 @@ env:
       secretKeyRef:
         name: star-server
         key: S3_SECRET
+livenessProbe:
+  httpGet:
+    port: 443
+readinessProbe:
+  httpGet:
+    port: 443
