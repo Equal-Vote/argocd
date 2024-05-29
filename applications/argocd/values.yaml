@@ -11,6 +11,12 @@ configs:
       secrets+age-import, secrets+age-import-kubernetes,
       secrets,secrets+literal,
       https
+  repositories:
+    star-server-oci
+      url: "registry.gitlab.com/dedevsecops/charts"
+      type: "helm"
+      name: "star-server"
+      enableOCI: true
 
 server:
   ingress:
