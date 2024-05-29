@@ -9,7 +9,7 @@
     "application": {
         "name": "star-server",
         "chartName": "app",
-        "chartURL": "oci://registry.gitlab.com/dedevsecops/charts",
+        "chartURL": "registry.gitlab.com/dedevsecops/charts",
         "revision": "0.1.0",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
         "valuesRevision": "HEAD",
