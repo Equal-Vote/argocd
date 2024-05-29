@@ -71,7 +71,7 @@ env:
         key: S3_SECRET
 livenessProbe:
   httpGet:
-    port: 443
+    port: 5000
 readinessProbe:
   httpGet:
-    port: 443
+    port: 5000
