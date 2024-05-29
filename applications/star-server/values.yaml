@@ -69,6 +69,8 @@ env:
       secretKeyRef:
         name: star-server
         key: S3_SECRET
+service:
+  port: 5000
 livenessProbe:
   httpGet:
     port: 5000
