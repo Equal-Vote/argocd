@@ -1,7 +1,7 @@
 {
-  "id": "STAR Voting",
-  "realm": "STARVoting",
-  "displayName": "STAR Voting",
+  "id": "Prod",
+  "realm": "Prod",
+  "displayName": "Prod",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": false,
@@ -52,7 +52,7 @@
         "description": "${role_uma_authorization}",
         "composite": false,
         "clientRole": false,
-        "containerId": "STAR Voting",
+        "containerId": "Prod",
         "attributes": {}
       },
       {
@@ -61,7 +61,7 @@
         "description": "${role_offline-access}",
         "composite": false,
         "clientRole": false,
-        "containerId": "STAR Voting",
+        "containerId": "Prod",
         "attributes": {}
       },
       {
@@ -82,7 +82,7 @@
           }
         },
         "clientRole": false,
-        "containerId": "STAR Voting",
+        "containerId": "Prod",
         "attributes": {}
       }
     ],
@@ -402,7 +402,7 @@
     "description": "${role_default-roles}",
     "composite": true,
     "clientRole": false,
-    "containerId": "STAR Voting"
+    "containerId": "Prod"
   },
   "requiredCredentials": [
     "password"
@@ -465,13 +465,13 @@
       "clientId": "account",
       "name": "${client_account}",
       "rootUrl": "${authBaseUrl}",
-      "baseUrl": "/realms/STARVoting/account/",
+      "baseUrl": "/realms/Prod/account/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/realms/STARVoting/account/*"
+        "/realms/Prod/account/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
@@ -507,13 +507,13 @@
       "clientId": "account-console",
       "name": "${client_account-console}",
       "rootUrl": "${authBaseUrl}",
-      "baseUrl": "/realms/STAR Voting/account/",
+      "baseUrl": "/realms/Prod/account/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/realms/STAR Voting/account/*"
+        "/realms/Prod/account/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
@@ -675,13 +675,13 @@
       "clientId": "security-admin-console",
       "name": "${client_security-admin-console}",
       "rootUrl": "${authAdminUrl}",
-      "baseUrl": "/admin/STARVoting/console/",
+      "baseUrl": "/admin/Prod/console/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/admin/STARVoting/console/*"
+        "/admin/Prod/console/*"
       ],
       "webOrigins": [
         "+"
