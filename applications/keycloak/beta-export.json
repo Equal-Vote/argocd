@@ -307,7 +307,7 @@
           "attributes": {}
         }
       ],
-      "star_vote_web": [],
+      "web": [],
       "security-admin-console": [],
       "admin-cli": [],
       "account-console": [],
@@ -812,8 +812,8 @@
     },
     {
       "id": "7804660f-ad64-4892-b022-4229716d1107",
-      "clientId": "star_vote_web",
-      "name": "Star Vote Website Client",
+      "clientId": "web",
+      "name": "Website Client",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
