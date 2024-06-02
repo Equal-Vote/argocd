@@ -744,13 +744,9 @@
       "secret": "**********",
       "redirectUris": [
         "https://beta.star.vote/*",
-        "https://star-vote-review-1.herokuapp.com/*",
-        "https://star-vote-review-3.herokuapp.com/*",
         "http://localhost:3000/*",
         "https://star-server.whitebeach-7ec335ce.westus2.azurecontainerapps.io/*",
-        "https://star-vote-review-2.herokuapp.com/*",
-        "https://star.vote/*",
-        "https://star-vote.herokuapp.com/*"
+        "https://star.vote/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
