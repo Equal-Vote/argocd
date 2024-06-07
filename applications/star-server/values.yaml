@@ -27,30 +27,8 @@ env:
     value: "https://keycloak.sandbox.star.vote/realms/Beta/protocol/openid-connect"
   - name: REACT_APP_TITLE
     value: "star.sandbox.star.vote"
-  - name: REACT_APP_FF_ELECTION_ROLES
-    value: "false"
-  - name: REACT_APP_FF_METHOD_STAR_PR
-    value: "true"
-  - name: REACT_APP_FF_METHOD_RANKED_ROBIN
-    value: "false"
-  - name: REACT_APP_FF_METHOD_APPROVAL
-    value: "false"
-  - name: REACT_APP_FF_METHOD_RANKED_CHOICE
-    value: "false"
-  - name: REACT_APP_FF_CANDIDATE_DETAILS
-    value: "false"
-  - name: REACT_APP_FF_CANDIDATE_PHOTOS
-    value: "false"
-  - name: REACT_APP_FF_PRECINCTS
-    value: "false"
-  - name: REACT_APP_FF_MULTI_RACE
-    value: "false"
-  - name: REACT_APP_FF_MULTI_WINNER
-    value: "true"
-  - name: REACT_APP_FF_CUSTOM_REGISTRATION
-    value: "false"
-  - name: REACT_APP_FF_VOTER_FLAGGING
-    value: "false"
+  - name: REACT_APP_FEATURED_ELECTIONS
+    value: "4e7b3f9d-ce53-4b25-8747-b5927c6745aa,753bb873-12de-4aca-af25-e96ec72f0b49,18ad9f37-94a8-4fed-a784-83761c692052"
   - name: DATABASE_URL
     valueFrom:
       secretKeyRef:
