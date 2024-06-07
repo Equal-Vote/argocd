@@ -1,5 +1,5 @@
 auth:
-  adminUser: "admin"
+  adminUser: "admin" # this doesn't appear to work, I used "user" as the login name instead
   existingSecret: "keycloak"
 
 production: true
