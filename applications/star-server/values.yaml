@@ -24,7 +24,7 @@ env:
   - name: S3_ID
     value: "AKIA4DAHQS5EADVYNTUP"
   - name: REACT_APP_KEYCLOAK_URL
-    value: "https://keycloak.sandbox.star.vote/realms/Beta/protocol/openid-connect"
+    value: "https://keycloak.sandbox.star.vote/realms/Dev/protocol/openid-connect"
   - name: REACT_APP_TITLE
     value: "star.sandbox.star.vote"
   - name: REACT_APP_FEATURED_ELECTIONS
