@@ -23,6 +23,8 @@ env:
     value: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1pykfFHROSZY8/Q2071vAaplb4uBrj+Ei5uVVYwyhtSuJNKIhpIXukcfAAud/Qq35/a6kZoLCn5DyPZFhuq6nqyen0w9Kwjy91Oc1VR/hRPRPAWdCv5LfsS7/3nuN9O8cUCpkZG16CD92JtmEYNXd6LvFooDa4MNMDk3jOxRRVgFzzbGvq7WUkDySN/9pxsQ2OsmoWNvswIM5LMbyKCyP+F8F10wuOwFcon5PWK8MJ5ob/BDeUqTuyS6TwNst2Ui6Tf2WhC4x7V7+RxSnP5oxjpP4K7cWoCExDcOUY33ZQM7Z9zbs0B0XC9f0Ev9JNKHDhtAyKvg6DrMGlyTyLyLXQIDAQAB"
   - name: S3_ID
     value: "AKIA4DAHQS5EADVYNTUP"
+  - name: KEYCLOAK_URL
+    value: "https://keycloak.keycloak.svc.cluster.local/realms/Dev/protocol/openid-connect"
   - name: REACT_APP_KEYCLOAK_URL
     value: "https://keycloak.sandbox.star.vote/realms/Dev/protocol/openid-connect"
   - name: REACT_APP_TITLE
