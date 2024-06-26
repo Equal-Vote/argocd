@@ -24,4 +24,4 @@ else
   git mv "${SCRIPT_DIR}/applications-disabled/${app}" ${SCRIPT_DIR}/applications/
   git commit -m "Enabling ${app}"
   git push
-fi 
+fi

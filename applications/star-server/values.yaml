@@ -13,7 +13,7 @@ ingress:
   tls:
     - secretName: star-server-tls
       hosts:
-        - dev.star.vote 
+        - dev.star.vote
 env:
   - name: ALLOWED_URLS
     value: "http://localhost:3000/"

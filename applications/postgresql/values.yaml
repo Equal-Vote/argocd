@@ -9,4 +9,3 @@ auth:
   secretKeys:
     userPasswordKey: "application"
     replicationPasswordKey: "replicator"
-

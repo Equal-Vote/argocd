@@ -1135,4 +1135,3 @@ cronjobs:
 
     ## @param cronjobs.archive.extraEnvVars Extra environment variables for the archive CronJob
     extraEnvVars: []
-
