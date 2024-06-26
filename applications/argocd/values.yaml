@@ -26,7 +26,6 @@ server:
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-      external-dns.alpha.kubernetes.io/hostname: "argocd.prod.equal.vote"
       nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"
 
 repoServer:
