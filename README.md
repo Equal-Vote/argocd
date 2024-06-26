@@ -27,7 +27,7 @@ IDENTITY_NAME="equalvote-identity"
 az identity create --resource-group "${IDENTITY_RESOURCE_GROUP}" --name "${IDENTITY_NAME}"
 
 AZURE_DNS_ZONE_RESOURCE_GROUP="equalvote"
-AZURE_DNS_ZONE="sandbox.star.vote"
+AZURE_DNS_ZONE="prod.equal.vote"
 IDENTITY_CLIENT_ID=$(az identity show --resource-group "${IDENTITY_RESOURCE_GROUP}" \
   --name "${IDENTITY_NAME}" --query "clientId" --output tsv)
 DNS_ID=$(az network dns zone show --name "${AZURE_DNS_ZONE}" \
@@ -46,7 +46,7 @@ az identity federated-credential create --name ${IDENTITY_NAME} --identity-name 
 
 ```
 export AZURE_DEFAULTS_GROUP=equalvote
-export DOMAIN_NAME=sandbox.star.vote
+export DOMAIN_NAME=prod.equal.vote
 export CLUSTER=equalvote
 export EMAIL_ADDRESS=gmail@evanstucker.com
 export AZURE_SUBSCRIPTION_ID=$(az account show --query id -o tsv)

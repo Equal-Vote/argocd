@@ -6,7 +6,7 @@ production: true
 
 ingress:
   enabled: true
-  hostname: "keycloak.sandbox.star.vote"
+  hostname: "keycloak.prod.equal.vote"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"

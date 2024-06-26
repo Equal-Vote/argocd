@@ -1,5 +1,5 @@
 global:
-  domain: "argocd.sandbox.star.vote"
+  domain: "argocd.prod.equal.vote"
 
 configs:
   params:
@@ -26,7 +26,7 @@ server:
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-      external-dns.alpha.kubernetes.io/hostname: "argocd.sandbox.star.vote"
+      external-dns.alpha.kubernetes.io/hostname: "argocd.prod.equal.vote"
       nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"
 
 repoServer:

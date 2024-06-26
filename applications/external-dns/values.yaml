@@ -1,5 +1,5 @@
 domainFilters:
-  - sandbox.star.vote
+  - prod.equal.vote
 policy: sync
 serviceAccount:
   annotations:

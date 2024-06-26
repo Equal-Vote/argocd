@@ -1,6 +1,6 @@
 ingress:
   enabled: true
-  hostname: "matomo2.sandbox.star.vote"
+  hostname: "matomo2.prod.equal.vote"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"

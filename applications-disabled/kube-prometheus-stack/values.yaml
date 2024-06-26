@@ -23,11 +23,11 @@ alertmanager:
       nginx.ingress.kubernetes.io/auth-secret: "alertmanager-auth"
       nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - am"
     hosts:
-    - alertmanager.sandbox.star.vote
+    - alertmanager.prod.equal.vote
     tls:
     - secretName: alertmanager-tls
       hosts:
-      - alertmanager.sandbox.star.vote
+      - alertmanager.prod.equal.vote
 
 prometheus:
   ingress:
@@ -38,11 +38,11 @@ prometheus:
       nginx.ingress.kubernetes.io/auth-secret: "prometheus-auth"
       nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - prom"
     hosts:
-    - prometheus.sandbox.star.vote
+    - prometheus.prod.equal.vote
     tls:
     - secretName: prometheus-tls
       hosts:
-      - prometheus.sandbox.star.vote
+      - prometheus.prod.equal.vote
 
 grafana:
   additionalDataSources:
@@ -54,8 +54,8 @@ grafana:
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
     hosts:
-    - grafana.sandbox.star.vote
+    - grafana.prod.equal.vote
     tls:
     - secretName: grafana-tls
       hosts:
-      - grafana.sandbox.star.vote
+      - grafana.prod.equal.vote
