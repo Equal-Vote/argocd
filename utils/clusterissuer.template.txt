@@ -15,7 +15,10 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
-    - dns01:
+    - selector:
+        dnsNames:
+        - '*.prod.equal.vote'
+      dns01:
         azureDNS:
           hostedZoneName: $DOMAIN_NAME
           resourceGroupName: $AZURE_DEFAULTS_GROUP
@@ -23,3 +26,6 @@ spec:
           environment: AzurePublicCloud
           managedIdentity:
             clientID: $IDENTITY_CLIENT_ID
+    - http01:
+        ingress:
+          ingressClassName: nginx
