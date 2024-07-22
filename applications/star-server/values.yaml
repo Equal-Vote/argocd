@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/equal-vote/star-server
-  tag: "sha-e909d6b"
+  tag: "sha-bf792e9"
 ingress:
   enabled: true
   annotations:
