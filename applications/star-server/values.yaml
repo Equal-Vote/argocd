@@ -27,6 +27,8 @@ env:
     value: "http://keycloak.keycloak.svc.cluster.local/realms/Prod/protocol/openid-connect"
   - name: REACT_APP_KEYCLOAK_URL
     value: "https://keycloak.prod.equal.vote/realms/Prod/protocol/openid-connect"
+  - name: REACT_APP_SOCKET_URL
+    value: https://dev.star.vote
   - name: REACT_APP_TITLE
     value: "dev.star.vote"
   - name: REACT_APP_FEATURED_ELECTIONS
