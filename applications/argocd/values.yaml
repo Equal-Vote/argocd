@@ -12,7 +12,7 @@ configs:
       secrets,secrets+literal,
       https
   repositories:
-    star-server-oci
+    star-server-oci:
       url: "registry.gitlab.com/dedevsecops/charts"
       type: "helm"
       name: "star-server"
