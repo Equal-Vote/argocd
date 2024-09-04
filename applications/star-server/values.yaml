@@ -35,6 +35,8 @@ env:
     value: "4e7b3f9d-ce53-4b25-8747-b5927c6745aa,753bb873-12de-4aca-af25-e96ec72f0b49,18ad9f37-94a8-4fed-a784-83761c692052"
   - name: REACT_APP_MAX_BALLOT_RANKS
     value: "8"
+  - name: REACT_APP_DEFAULT_BALLOT_RANKS
+    value: "6"
   - name: SENDGRID_GROUP_ID
     value: "43160"
   - name: FROM_EMAIL_ADDRESS
