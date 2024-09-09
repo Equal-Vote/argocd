@@ -14,6 +14,7 @@ ingress:
     - secretName: star-server-tls
       hosts:
         - bettervoting.com
+        - dev.star.vote
 env:
   - name: ALLOWED_URLS
     value: "http://localhost:3000/"
