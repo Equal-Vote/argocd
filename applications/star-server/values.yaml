@@ -5,16 +5,9 @@ ingress:
   enabled: true
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
   hosts:
     - host: bettervoting.com
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-    - host: www.bettervoting.com
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-    - host: dev.star.vote
       paths:
         - path: /
           pathType: ImplementationSpecific
@@ -23,7 +16,6 @@ ingress:
       hosts:
         - bettervoting.com
         - www.bettervoting.com
-        - dev.star.vote
 env:
   - name: ALLOWED_URLS
     value: "http://localhost:3000/"
