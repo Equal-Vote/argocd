@@ -11,16 +11,11 @@ ingress:
       paths:
         - path: /
           pathType: ImplementationSpecific
-    - host: dev.star.vote
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
   tls:
     - secretName: star-server-tls
       hosts:
         - bettervoting.com
         - www.bettervoting.com
-        - dev.star.vote
 env:
   - name: ALLOWED_URLS
     value: "http://localhost:3000/"
