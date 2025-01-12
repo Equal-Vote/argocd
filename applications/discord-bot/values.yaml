@@ -8,5 +8,5 @@ env:
       secretKeyRef:
         name: discord-bot
         key: DISCORD_TOKEN
-livenessProbe: null
-readinessProbe: null
+livenessProbe: {}
+readinessProbe: {}
