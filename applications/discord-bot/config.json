@@ -2,7 +2,7 @@
   "application": {
     "chartName": "app",
     "chartURL": "registry.gitlab.com/devopscoop/charts",
-    "name": "star-server",
+    "name": "discord-bot",
     "phase": "post",
     "revision": "0.4.0",
     "valuesRevision": "HEAD",
@@ -13,6 +13,6 @@
   },
   "cluster": {
     "name": "in-cluster",
-    "namespace": "starvote"
+    "namespace": "discord-bot"
   }
 }
