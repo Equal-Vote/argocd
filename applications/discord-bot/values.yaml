@@ -1,0 +1,10 @@
+replicaCount: 1
+image:
+  repository: ghcr.io/equal-vote/discord-bot
+  tag: "sha-c058372"
+env:
+  - name: DISCORD_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: discord-bot
+        key: DISCORD_TOKEN

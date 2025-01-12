@@ -1,0 +1,18 @@
+{
+  "application": {
+    "chartName": "app",
+    "chartURL": "registry.gitlab.com/dedevsecops/charts",
+    "name": "discord-bot",
+    "phase": "post",
+    "revision": "0.1.0",
+    "valuesRevision": "HEAD",
+    "valuesURL": "https://github.com/Equal-Vote/argocd.git"
+  },
+  "argocd": {
+    "project": "default"
+  },
+  "cluster": {
+    "name": "in-cluster",
+    "namespace": "discord-bot"
+  }
+}
