@@ -12,3 +12,5 @@ auth:
 primary:
   livenessProbe:
     periodSeconds: 300 # there are some commands that cause the db to freeze up temporarily and then the liveness probe kills the pod prematurely
+  service:
+    type: LoadBalancer
