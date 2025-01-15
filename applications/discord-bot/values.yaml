@@ -9,12 +9,14 @@ env:
         name: discord-bot
         key: DISCORD_TOKEN
 livenessProbe:
+  httpGet: {}
   exec:
     command:
       - sh
       - -c
       - ls -l /proc/*/exe | grep -q python
 readinessProbe:
+  httpGet: {}
   exec:
     command:
       - sh
