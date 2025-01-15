@@ -8,5 +8,9 @@ env:
       secretKeyRef:
         name: discord-bot
         key: DISCORD_TOKEN
-livenessProbe: {}
-readinessProbe: {}
+livenessProbe:
+  httpGet:
+    port: 40404
+readinessProbe:
+  httpGet:
+    port: 40404
