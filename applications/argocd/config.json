@@ -1,18 +1,18 @@
 {
-    "cluster": {
-        "name": "in-cluster",
-        "namespace": "argocd"
-    },
-    "argocd": {
-        "project": "default"
-    },
-    "application": {
-        "name": "argocd",
-        "chartName": "argo-cd",
-        "chartURL": "https://argoproj.github.io/argo-helm",
-        "revision": "6.7.12",
-        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
-        "valuesRevision": "HEAD",
-        "phase": "core"
-    }
+  "application": {
+    "chartName": "argo-cd",
+    "chartURL": "https://argoproj.github.io/argo-helm",
+    "name": "argocd",
+    "phase": "core",
+    "revision": "7.7.16",
+    "valuesRevision": "HEAD",
+    "valuesURL": "https://github.com/Equal-Vote/argocd.git"
+  },
+  "argocd": {
+    "project": "default"
+  },
+  "cluster": {
+    "name": "in-cluster",
+    "namespace": "argocd"
+  }
 }
