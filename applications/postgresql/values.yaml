@@ -10,5 +10,8 @@ auth:
     userPasswordKey: "application"
     replicationPasswordKey: "replicator"
 primary:
+# there are some commands that cause the db to freeze up temporarily and then the liveness probe kills the pod prematurely
   livenessProbe:
-    periodSeconds: 300 # there are some commands that cause the db to freeze up temporarily and then the liveness probe kills the pod prematurely
+    periodSeconds: 600 
+  readinessProbe:
+    periodSeconds: 600 
