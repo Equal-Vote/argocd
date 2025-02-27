@@ -1,7 +1,7 @@
 replicaCount: 2
 image:
   repository: ghcr.io/equal-vote/star-server
-  tag: "sha-275ab8e"
+  tag: "sha-3588e42"
 ingress:
   enabled: true
   annotations:
