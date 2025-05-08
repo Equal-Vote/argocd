@@ -37,7 +37,7 @@ env:
   - name: REACT_APP_FEATURED_ELECTIONS
     value: 6pvv9t
   - name: REACT_APP_MAX_BALLOT_RANKS
-    value: "8"
+    value: "9"
   - name: REACT_APP_DEFAULT_BALLOT_RANKS
     value: "6"
   - name: SENDGRID_GROUP_ID
