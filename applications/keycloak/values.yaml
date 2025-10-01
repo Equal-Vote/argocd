@@ -3,15 +3,6 @@ image:
 keycloakConfigCli:
   image:
     repository: bitnamilegacy/keycloak-config-cli
-postgresql:
-  image:
-    repository: bitnamilegacy/postgresql
-  volumePermissions:
-    image:
-      repository: bitnamilegacy/os-shell
-  metrics:
-    image:
-      repository: bitnamilegacy/os-shell
 
 auth:
   adminUser: "admin" # this doesn't appear to work, I used "user" as the login name instead
@@ -44,3 +35,11 @@ postgresql:
   auth:
     existingSecret: "keycloak-postgresql"
   architecture: standalone
+  image:
+    repository: bitnamilegacy/postgresql
+  volumePermissions:
+    image:
+      repository: bitnamilegacy/os-shell
+  metrics:
+    image:
+      repository: bitnamilegacy/os-shell
