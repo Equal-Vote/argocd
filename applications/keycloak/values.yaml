@@ -1,3 +1,9 @@
+image:
+  repository: bitnamilegacy/keycloak
+keycloakConfigCli:
+  image:
+    repository: bitnamilegacy/keycloak-config-cli
+
 auth:
   adminUser: "admin" # this doesn't appear to work, I used "user" as the login name instead
   existingSecret: "keycloak"
