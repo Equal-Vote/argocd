@@ -86,5 +86,31 @@ Grafana: This is the web end point for viewing those logs
 
 2. **Verify deployment**: Go to argocd.prod.equal.vote and verify that the loki cluster is present and green
 
-3. **Forward the service endpoint**: 
+3. **Verify grafana**: Depending on the loki values, we may not have grafana enabled. Run ``kubectl get services -n monitoring`` and verify that loki-grafana is present.
+
+4. **Forward the service endpoint**: ``kubectl port-forward svc/loki-grafana 80:80 -n monitoring``, then it should be live at localhost:80
+
+5. **Login**: Currently the username and password are both "admin"
+
+6. **Enter Query Editor**: Open Hamburger -> Explore to enter queries. You can use code mode to run some of the example queries
+
+# Grafana example queries
+
+**Show all logs for the star-server backend**
+
+```
+{pod=~"star-server-app-.*"}
+```
+
+**Find all 500 Errors**
+
+```
+{pod=~"star-server-app-.*"} |~ "status:50.+"
+```
+
+**Trace a specific API request**
+
+```
+{pod=~"star-server-app-.*"} |~ "ctx:c09a38fc"
+```
 
