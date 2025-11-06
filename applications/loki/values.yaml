@@ -1,0 +1,7 @@
+grafana:
+  enabled: true
+  adminPassword: admin
+  service:
+    type: ClusterIP
+  persistence:
+    enabled: false

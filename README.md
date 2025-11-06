@@ -75,3 +75,16 @@ Create the clusterissuer:
 cat clusterissuer.template.txt | envsubst > clusterissuer.yaml
 k apply -f clusterissuer.yaml
 ```
+
+# Using Loki/Grafana
+
+Loki: This is a service for backing up logs
+
+Grafana: This is the web end point for viewing those logs
+
+1. **Verify Applications Directory**: Since we're in frugality mode, this service will only be enabled temporarily. Before you start using it make the loki directory is in applications. If not then it likely needs to be moved from the applications-disabled directory.
+
+2. **Verify deployment**: Go to argocd.prod.equal.vote and verify that the loki cluster is present and green
+
+3. **Forward the service endpoint**: 
+
