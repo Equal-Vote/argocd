@@ -114,3 +114,9 @@ Grafana: This is the web end point for viewing those logs
 {pod=~"star-server-app-.*"} |~ "ctx:c09a38fc"
 ```
 
+**500 Errors w/o robots.txt**
+
+```
+{pod=~"star-server-app-.*"} |~ "status:50.+" != "robots.txt"
+```
+
