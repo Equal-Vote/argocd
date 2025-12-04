@@ -13,10 +13,9 @@ ingress:
         - path: /
           pathType: ImplementationSpecific
   tls:
-    - secretName: star-server-tls
+    - secretName: alaska-rcv-tls
       hosts:
-        - bettervoting.com
-        - www.bettervoting.com
+        - realrcv.equal.vote
 env: []
 service:
   port: 3000
