@@ -1,0 +1,22 @@
+replicaCount: 2
+image:
+  repository: ghcr.io/equal-vote/alaska-rcv
+  tag: "sha-7e9330c"
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+  hosts:
+    - host: realrcv.equal.vote
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: star-server-tls
+      hosts:
+        - bettervoting.com
+        - www.bettervoting.com
+env: []
+service:
+  port: 3000

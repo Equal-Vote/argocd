@@ -1,0 +1,18 @@
+{
+  "application": {
+    "chartName": "app",
+    "chartURL": "registry.gitlab.com/devopscoop/charts",
+    "name": "alaska-rcv",
+    "phase": "post",
+    "revision": "0.4.0",
+    "valuesRevision": "HEAD",
+    "valuesURL": "https://github.com/Equal-Vote/argocd.git"
+  },
+  "argocd": {
+    "project": "default"
+  },
+  "cluster": {
+    "name": "in-cluster",
+    "namespace": "alaska"
+  }
+}
