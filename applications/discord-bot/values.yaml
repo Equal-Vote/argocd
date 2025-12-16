@@ -1,7 +1,7 @@
 replicaCount: 1
 image:
   repository: ghcr.io/equal-vote/discord-bot
-  tag: "sha-5f48a9f"
+  tag: "sha-6615437"
 env:
   - name: DISCORD_TOKEN
     valueFrom:
