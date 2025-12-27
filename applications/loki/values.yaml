@@ -11,10 +11,7 @@ grafana:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
     hosts:
-      - host: logs.prod.equal.vote
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
+      - logs.prod.equal.vote
     tls:
       - secretName: grafana-tls
         hosts:
