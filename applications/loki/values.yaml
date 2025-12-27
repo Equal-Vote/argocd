@@ -11,11 +11,11 @@ grafana:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
     hosts:
-      - host: logs.bettervoting.com
+      - host: logs.prod.equal.vote
         paths:
           - path: /
             pathType: ImplementationSpecific
     tls:
       - secretName: grafana-tls
         hosts:
-          - logs.bettervoting.com
+          - logs.prod.equal.vote
