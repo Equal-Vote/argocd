@@ -5,3 +5,17 @@ grafana:
     type: ClusterIP
   persistence:
     enabled: false
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+    hosts:
+      - host: logs.bettervoting.com
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - logs.bettervoting.com
