@@ -9,7 +9,7 @@ env:
         name: discord-bot
         key: DISCORD_TOKEN
   - name: BOT_DATABASE_PATH
-    value: "/applications/discord-bot/ViewData.db"
+    value: "/tmp/ViewData.db"
 livenessProbe:
   httpGet: null
   exec:
