@@ -4,7 +4,7 @@
     "chartURL": "registry.gitlab.com/devopscoop/charts",
     "name": "alaska-rcv",
     "phase": "post",
-    "revision": "0.4.0",
+    "revision": "0.8.1",
     "valuesRevision": "HEAD",
     "valuesURL": "https://github.com/Equal-Vote/argocd.git"
   },
