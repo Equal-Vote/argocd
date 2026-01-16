@@ -4,7 +4,7 @@
     "chartURL": "registry.gitlab.com/devopscoop/charts",
     "name": "discord-bot",
     "phase": "post",
-    "revision": "0.8.1",
+    "revision": "0.8.2",
     "valuesRevision": "HEAD",
     "valuesURL": "https://github.com/Equal-Vote/argocd.git"
   },
