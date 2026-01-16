@@ -1,7 +1,7 @@
 replicaCount: 2
 image:
   repository: ghcr.io/equal-vote/bettervoting
-  tag: "sha-73fdbdd"
+  tag: "sha-6eb48ec"
 ingress:
   enabled: true
   annotations:
