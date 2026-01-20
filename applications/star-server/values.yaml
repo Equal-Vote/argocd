@@ -63,11 +63,11 @@ env:
       secretKeyRef:
         name: star-server
         key: KEYCLOAK_SECRET
-  - name: S3_SECRET
+  - name: AZURE_STORAGE_CONNECTION_STRING
     valueFrom:
       secretKeyRef:
         name: star-server
-        key: S3_SECRET
+        key: AZURE_STORAGE_CONNECTION_STRING
 service:
   port: 5000
 livenessProbe:
