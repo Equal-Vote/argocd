@@ -19,9 +19,9 @@ ingress:
         - www.bettervoting.com
 env:
   - name: CLASSIC_ELECTION_COUNT
-    value: 0
+    value: "0"
   - name: CLASSIC_VOTE_COUNT
-    value: 18,443
+    value: "18443"
   - name: ALLOWED_URLS
     value: "http://localhost:3000/"
   - name: DEV_DATABASE
