@@ -1,4 +1,4 @@
-replicaCount: 1
+replicaCount: 0
 image:
   repository: ghcr.io/equal-vote/discord-bot
   tag: "sha-892c8ba"
