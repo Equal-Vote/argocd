@@ -18,6 +18,8 @@ ingress:
         - bettervoting.com
         - www.bettervoting.com
 env:
+  - name: LOG_LEVEL
+    value: "info"
   - name: CLASSIC_ELECTION_COUNT
     value: "0"
   - name: CLASSIC_VOTE_COUNT
