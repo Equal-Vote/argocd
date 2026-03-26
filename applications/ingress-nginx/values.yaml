@@ -6,3 +6,9 @@ controller:
   ingressClassResource:
     default: true
   replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 67Mi
+    limits:
+      memory: 67Mi

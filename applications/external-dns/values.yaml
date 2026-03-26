@@ -1,6 +1,12 @@
 domainFilters:
   - prod.equal.vote
 policy: sync
+resources:
+  requests:
+    cpu: 50m
+    memory: 30Mi
+  limits:
+    memory: 30Mi
 serviceAccount:
   annotations:
     azure.workload.identity/client-id: 747dcea4-b636-4456-8103-95e3335192f4

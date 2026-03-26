@@ -18,8 +18,14 @@ auth:
     userPasswordKey: "application"
     replicationPasswordKey: "replicator"
 primary:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 198Mi
+    limits:
+      memory: 198Mi
 # there are some commands that cause the db to freeze up temporarily and then the liveness probe kills the pod prematurely
   livenessProbe:
-    periodSeconds: 600 
+    periodSeconds: 600
   readinessProbe:
-    periodSeconds: 600 
+    periodSeconds: 600

@@ -19,3 +19,9 @@ ingress:
 env: []
 service:
   port: 3000
+resources:
+  requests:
+    cpu: 50m
+    memory: 132Mi
+  limits:
+    memory: 132Mi

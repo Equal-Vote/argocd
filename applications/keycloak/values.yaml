@@ -25,10 +25,10 @@ tls:
 
 resources:
   requests:
-    memory: 512Mi
-  limits:
     cpu: 250m
-    memory: 1024Mi
+    memory: 962Mi
+  limits:
+    memory: 962Mi
 
 postgresql:
   enabled: true
@@ -43,3 +43,10 @@ postgresql:
   metrics:
     image:
       repository: bitnamilegacy/os-shell
+  primary:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 35Mi
+      limits:
+        memory: 35Mi

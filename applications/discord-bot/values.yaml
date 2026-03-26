@@ -10,6 +10,12 @@ env:
         key: DISCORD_TOKEN
   - name: BOT_DATABASE_PATH
     value: "/tmp/ViewData.db"
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 128Mi
 livenessProbe:
   httpGet: null
   exec:

@@ -36,7 +36,29 @@ server:
       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
       nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"
 
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 303Mi
+    limits:
+      memory: 303Mi
+
+redis:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 5Mi
+    limits:
+      memory: 5Mi
+
 repoServer:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 142Mi
+    limits:
+      memory: 142Mi
   podLabels:
     azure.workload.identity/use: "true"
 

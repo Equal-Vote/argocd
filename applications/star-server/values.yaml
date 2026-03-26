@@ -1,7 +1,7 @@
 replicaCount: 2
 image:
   repository: ghcr.io/equal-vote/bettervoting
-  tag: "sha-0f07860"
+  tag: "sha-005ee1f"
 ingress:
   enabled: true
   annotations:
@@ -72,6 +72,12 @@ env:
         key: AZURE_STORAGE_CONNECTION_STRING
 service:
   port: 5000
+resources:
+  requests:
+    cpu: 100m
+    memory: 125Mi
+  limits:
+    memory: 125Mi
 livenessProbe:
   httpGet:
     port: 5000
