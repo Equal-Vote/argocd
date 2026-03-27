@@ -4,3 +4,25 @@ podLabels:
 serviceAccount:
   labels:
     azure.workload.identity/use: "true"
+resources:
+  requests:
+    cpu: 50m
+    memory: 37Mi
+  limits:
+    memory: 37Mi
+
+webhook:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 14Mi
+    limits:
+      memory: 14Mi
+
+cainjector:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 67Mi
+    limits:
+      memory: 67Mi

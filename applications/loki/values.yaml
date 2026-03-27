@@ -1,3 +1,19 @@
+loki:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 224Mi
+    limits:
+      memory: 224Mi
+
+promtail:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 123Mi
+    limits:
+      memory: 123Mi
+
 grafana:
   enabled: true
   adminPassword: admin
@@ -16,3 +32,9 @@ grafana:
       - secretName: grafana-tls
         hosts:
           - logs.prod.equal.vote
+  resources:
+    requests:
+      cpu: 50m
+      memory: 165Mi
+    limits:
+      memory: 165Mi
