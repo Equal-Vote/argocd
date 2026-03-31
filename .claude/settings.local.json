@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -d */)",
+      "Bash(find . -maxdepth 3 -type f \\\\\\(-name Makefile -o -name docker-compose.yml -o -name package.json -o -name .github -o -name *.yaml -o -name *.yml \\\\\\))"
+    ]
+  }
+}
