@@ -18,6 +18,17 @@ auth:
     userPasswordKey: "application"
     replicationPasswordKey: "replicator"
 primary:
+  resources:
+    requests:
+      memory: 256Mi
+    limits:
+      memory: 256Mi
+  extendedConfiguration: |
+    shared_buffers = 64MB              # 25% of 256Mi memory (lower than default due to memory constraints)
+    effective_cache_size = 128MB        # 50% of 256Mi memory (planner hint only, not actual allocation)
+    checkpoint_timeout = 10min          # Increased from 5min to reduce checkpoint frequency
+    min_wal_size = 32MB                 # Reduced from 80MB (small database, less WAL overhead)
+    max_wal_size = 128MB                # Reduced from 400MB (small database, smaller WAL footprint)
 # there are some commands that cause the db to freeze up temporarily and then the liveness probe kills the pod prematurely
   livenessProbe:
     periodSeconds: 600 
