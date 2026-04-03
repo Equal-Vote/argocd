@@ -2,7 +2,6 @@ grafana:
   enabled: true
   admin:
     existingSecret: "loki-grafana-admin"
-    userKey: admin-user
     passwordKey: admin-password
   service:
     type: ClusterIP
