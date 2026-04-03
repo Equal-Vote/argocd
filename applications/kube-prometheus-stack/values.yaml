@@ -20,8 +20,7 @@ alertmanager:
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/auth-type: "basic"
-      nginx.ingress.kubernetes.io/auth-secret: "alertmanager-auth"
-      nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - am"
+      nginx.ingress.kubernetes.io/auth-secret: "basic-auth"
     hosts:
     - alertmanager.prod.equal.vote
     tls:
@@ -35,8 +34,7 @@ prometheus:
     annotations:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/auth-type: "basic"
-      nginx.ingress.kubernetes.io/auth-secret: "prometheus-auth"
-      nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - prom"
+      nginx.ingress.kubernetes.io/auth-secret: "basic-auth"
     hosts:
     - prometheus.prod.equal.vote
     tls:
@@ -45,6 +43,8 @@ prometheus:
       - prometheus.prod.equal.vote
 
 grafana:
+  admin:
+    existingSecret: grafana
   additionalDataSources:
   - name: loki
     type: loki
