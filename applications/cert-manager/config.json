@@ -14,5 +14,11 @@
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
         "valuesRevision": "HEAD",
         "phase": "initial"
+    },
+    "syncPolicy": {
+        "automated": {
+            "prune": false,
+            "selfHeal": true
+        }
     }
 }
