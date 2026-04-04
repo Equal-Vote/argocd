@@ -111,13 +111,13 @@ grafana:
       memory: 384Mi
   admin:
     existingSecret: grafana
-  # additionalDataSources:
+  additionalDataSources:
+  - name: victoria-logs
+    type: vali
+    url: http://victoria-logs-single.victoria-logs-single:9428
   # - name: loki
   #   type: loki
   #   url: http://loki:3100
-  # - name: victoria-logs
-  #   type: vali
-  #   url: http://victoria-logs-single:9428
   ingress:
     enabled: true
     annotations:
