@@ -80,7 +80,7 @@ prometheus:
     limits:
       memory: 615Mi
   prometheusSpec:
-    storageSpec:
+    storage:
       enabled: true
       volumeClaimTemplate:
         spec:
