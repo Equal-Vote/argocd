@@ -176,3 +176,11 @@ redis:
       memory: 100Mi
     limits:
       memory: 100Mi
+
+applicationSet:
+  resources:
+    requests:
+      cpu: 96m
+      memory: 100Mi
+    limits:
+      memory: 100Mi

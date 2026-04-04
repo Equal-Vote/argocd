@@ -88,6 +88,13 @@ prometheus:
     limits:
       memory: 615Mi
   prometheusSpec:
+    storageSpec:
+      enabled: true
+      volumeClaimTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 1Gi
     containers:
       - name: config-reloader
         resources:
