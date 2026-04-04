@@ -5,6 +5,10 @@
 # crds:
 #   enabled: true
 
+# ArgoCD keeps recreating the startupapicheck job, which appears to be passing. It's stuck in a loop. So, we're just going to disable it here.
+startupapicheck:
+  enabled: false
+
 podLabels:
   azure.workload.identity/use: "true"
 serviceAccount:
