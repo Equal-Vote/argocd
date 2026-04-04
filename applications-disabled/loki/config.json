@@ -1,7 +1,7 @@
 {
     "cluster": {
         "name": "in-cluster",
-        "namespace": "monitoring"
+        "namespace": "loki"
     },
     "argocd": {
         "project": "default"
