@@ -11,23 +11,24 @@ serviceAccount:
   labels:
     azure.workload.identity/use: "true"
 
-resources:
-  requests:
-    cpu: 10m
-    memory: 100Mi
-  limits:
-    memory: 100Mi
-cainjector:
-  resources:
-    requests:
-      cpu: 10m
-      memory: 100Mi
-    limits:
-      memory: 100Mi
-webhook:
-  resources:
-    requests:
-      cpu: 10m
-      memory: 100Mi
-    limits:
-      memory: 100Mi
+# Commenting out for now to see if this is what's causing the deploy problem.
+# resources:
+#   requests:
+#     cpu: 10m
+#     memory: 100Mi
+#   limits:
+#     memory: 100Mi
+# cainjector:
+#   resources:
+#     requests:
+#       cpu: 10m
+#       memory: 100Mi
+#     limits:
+#       memory: 100Mi
+# webhook:
+#   resources:
+#     requests:
+#       cpu: 10m
+#       memory: 100Mi
+#     limits:
+#       memory: 100Mi
