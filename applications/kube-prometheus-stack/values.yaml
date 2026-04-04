@@ -1,19 +1,15 @@
-kubeControllerManager:
-  enabled: false
-
-kubeScheduler:
-  enabled: false
-
-kubeProxy:
-  enabled: false
-
-defaultRules:
-  rules:
-    kubernetesResources: false
-  disabled:
-    InfoInhibitor: true
-    KubeVersionMismatch: true
-
+# kubeControllerManager:
+#   enabled: false
+# kubeScheduler:
+#   enabled: false
+# kubeProxy:
+#   enabled: false
+# defaultRules:
+#   rules:
+#     kubernetesResources: false
+#   disabled:
+#     InfoInhibitor: true
+#     KubeVersionMismatch: true
 nodeExporter:
   resources:
     requests:
@@ -21,7 +17,6 @@ nodeExporter:
       memory: 100Mi
     limits:
       memory: 100Mi
-
 kube-state-metrics:
   resources:
     requests:
@@ -29,7 +24,6 @@ kube-state-metrics:
       memory: 100Mi
     limits:
       memory: 100Mi
-
 prometheusOperator:
   resources:
     requests:
@@ -37,7 +31,6 @@ prometheusOperator:
       memory: 323Mi
     limits:
       memory: 323Mi
-
 alertmanager:
   resources:
     requests:
@@ -79,7 +72,6 @@ alertmanager:
     - secretName: alertmanager-tls
       hosts:
       - alertmanager.prod.equal.vote
-
 prometheus:
   resources:
     requests:
@@ -116,7 +108,6 @@ prometheus:
     - secretName: prometheus-tls
       hosts:
       - prometheus.prod.equal.vote
-
 grafana:
   resources:
     requests:
