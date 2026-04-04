@@ -15,6 +15,26 @@ defaultRules:
     KubeVersionMismatch: true
 
 alertmanager:
+  config:
+    route:
+      # Uncomment this if alerts are too spammy.
+      # group_by: ["alertname"]
+      receiver: "slack"
+    receivers:
+    - name: "slack"
+      # https://prometheus.io/docs/alerting/latest/configuration/#slack_config
+      slack_configs:
+      - api_url_file: /etc/prometheus-secrets/alertmanager-slack/slack_webhook_url
+        channel: "#_bettervoting"
+        send_resolved: true
+        # TODO: Should we enable this?
+        # https://prometheus.io/docs/alerting/latest/notification_examples/#ranging-over-all-received-alerts
+        # title: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
+        # text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
+  secretMounts:
+  - name: alertmanager-slack
+    secretName: alertmanager-slack
+    mountPath: /etc/prometheus-secrets/alertmanager-slack
   ingress:
     enabled: true
     annotations:
