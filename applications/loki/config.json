@@ -8,9 +8,9 @@
     },
     "application": {
         "name": "loki",
-        "chartName": "loki-stack",
-        "chartURL": "https://grafana.github.io/helm-charts",
-        "revision": "2.10.2",
+        "chartName": "loki",
+        "chartURL": "https://grafana-community.github.io/helm-charts",
+        "revision": "9.5.4",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
         "valuesRevision": "HEAD",
         "phase": "core"
