@@ -1,0 +1,18 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "victoria-logs-single"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "victoria-logs-single",
+        "chartName": "victoria-logs-single",
+        "chartURL": "https://victoriametrics.github.io/helm-charts",
+        "revision": "0.11.31",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "core"
+    }
+}
