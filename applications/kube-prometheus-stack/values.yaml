@@ -34,9 +34,9 @@ prometheusOperator:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 323Mi
     limits:
-      memory: 100Mi
+      memory: 323Mi
 
 alertmanager:
   resources:
@@ -121,9 +121,9 @@ grafana:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 274Mi
     limits:
-      memory: 100Mi
+      memory: 274Mi
   admin:
     existingSecret: grafana
   additionalDataSources:
