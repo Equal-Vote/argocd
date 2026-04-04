@@ -46,9 +46,9 @@ repoServer:
   resources:
     requests:
       cpu: 72m
-      memory: 198Mi
+      memory: 396Mi
     limits:
-      memory: 198Mi
+      memory: 396Mi
   podLabels:
     azure.workload.identity/use: "true"
 
