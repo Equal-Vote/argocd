@@ -7,6 +7,12 @@ serviceAccount:
 podLabels:
   azure.workload.identity/use: "true"
 provider: azure
+resources:
+  requests:
+    cpu: 10m
+    memory: 100Mi
+  limits:
+    memory: 100Mi
 secretConfiguration:
   enabled: true
   mountPath: "/etc/kubernetes/"

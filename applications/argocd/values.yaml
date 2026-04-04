@@ -35,8 +35,20 @@ server:
       cert-manager.io/cluster-issuer: "letsencrypt-prod"
       nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
       nginx.ingress.kubernetes.io/cors-expose-headers: "*, X-CustomResponseHeader"
+  resources:
+    requests:
+      cpu: 10m
+      memory: 135Mi
+    limits:
+      memory: 135Mi
 
 repoServer:
+  resources:
+    requests:
+      cpu: 72m
+      memory: 198Mi
+    limits:
+      memory: 198Mi
   podLabels:
     azure.workload.identity/use: "true"
 
@@ -132,3 +144,35 @@ repoServer:
       name: custom-tools
     - mountPath: /custom-tools
       name: custom-tools
+
+applicationController:
+  resources:
+    requests:
+      cpu: 181m
+      memory: 1081Mi
+    limits:
+      memory: 1081Mi
+
+notificationsController:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      memory: 100Mi
+
+dex:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      memory: 100Mi
+
+redis:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      memory: 100Mi

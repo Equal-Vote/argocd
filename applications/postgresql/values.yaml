@@ -20,6 +20,7 @@ auth:
 primary:
   resources:
     requests:
+      cpu: 34m
       memory: 256Mi
     limits:
       memory: 256Mi
@@ -31,6 +32,6 @@ primary:
     max_wal_size = 128MB                # Reduced from 400MB (small database, smaller WAL footprint)
 # there are some commands that cause the db to freeze up temporarily and then the liveness probe kills the pod prematurely
   livenessProbe:
-    periodSeconds: 600 
+    periodSeconds: 600
   readinessProbe:
-    periodSeconds: 600 
+    periodSeconds: 600
