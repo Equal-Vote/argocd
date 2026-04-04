@@ -30,9 +30,9 @@ server:
   resources:
     requests:
       cpu: 10m
-      memory: 135Mi
+      memory: 256Mi
     limits:
-      memory: 135Mi
+      memory: 256Mi
 
 repoServer:
   resources:
