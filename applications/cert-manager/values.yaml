@@ -1,4 +1,7 @@
-installCRDs: true
+# dyff between <(yq . <(helm show values oci://quay.io/jetstack/charts/cert-manager --version v1.20.0)) <(yq eval '. * load("values.yaml")' <(helm show values oci://quay.io/jetstack/charts/cert-manager --version v1.20.0))
+# vim -O <(helm show values oci://quay.io/jetstack/charts/cert-manager --version v1.20.0) values.yaml
+crds:
+  enabled: true
 podLabels:
   azure.workload.identity/use: "true"
 serviceAccount:
@@ -10,7 +13,6 @@ resources:
     memory: 100Mi
   limits:
     memory: 100Mi
-
 cainjector:
   resources:
     requests:
@@ -18,7 +20,6 @@ cainjector:
       memory: 100Mi
     limits:
       memory: 100Mi
-
 webhook:
   resources:
     requests:
