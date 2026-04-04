@@ -57,14 +57,3 @@ spec:
 
           # This is fix this error: https://foxutech.medium.com/how-to-fix-too-long-must-have-at-most-262144-bytes-in-argocd-2a00cddbbe99
           - ServerSideApply=true
-
-        # This is to fix cert-manager flapping OutOfSync in ArgoCD
-        ignoreDifferences:
-          - group: admissionregistration.k8s.io
-            kind: MutatingWebhookConfiguration
-            jsonPointers:
-              - /webhooks
-          - group: admissionregistration.k8s.io
-            kind: ValidatingWebhookConfiguration
-            jsonPointers:
-              - /webhooks
