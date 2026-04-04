@@ -1,10 +1,8 @@
 # dyff between <(yq . <(helm show values oci://quay.io/jetstack/charts/cert-manager --version v1.20.0)) <(yq eval '. * load("values.yaml")' <(helm show values oci://quay.io/jetstack/charts/cert-manager --version v1.20.0))
 # vim -O <(helm show values oci://quay.io/jetstack/charts/cert-manager --version v1.20.0) values.yaml
 
-# ArgoCD is constantly showing this application as OutOfSync. Since CRDs have already been installed, I'm commenting this out.
-# crds:
-#   enabled: true
-
+crds:
+  enabled: true
 podLabels:
   azure.workload.identity/use: "true"
 serviceAccount:
