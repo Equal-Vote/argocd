@@ -6,7 +6,10 @@ loki:
     azure.workload.identity/use: "true"
   commonConfig:
     replication_factor: 1
+
+  # Fixes the "no org id" error in Grafana, in the Explore tab, when using Loki as the data source.
   auth_enabled: false
+
   schemaConfig:
     configs:
       - from: "2024-04-01"
