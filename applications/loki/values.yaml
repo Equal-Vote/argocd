@@ -1,0 +1,107 @@
+loki:
+  # The client_id will need to be filled in after running `tofu apply`.
+  # Get it with: tofu output -raw loki_client_id
+  # Or: az identity show -n loki -g equalvote --query clientId -o tsv
+  podLabels:
+    azure.workload.identity/use: "true"
+  commonConfig:
+    replication_factor: 1
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: azure
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+  storage:
+    type: azure
+    bucketNames:
+      chunks: loki-chunks
+      ruler: loki-ruler
+      admin: loki-admin
+    azure:
+      accountName: bettervoting
+      useFederatedToken: true
+  ingester:
+    chunk_encoding: snappy
+  limits_config:
+    allow_structured_metadata: true
+    volume_enabled: true
+    retention_period: 672h # 28 days
+  compactor:
+    retention_enabled: true
+    delete_request_store: azure
+  ruler:
+    enable_api: true
+  querier:
+    max_concurrent: 4
+
+serviceAccount:
+  name: loki
+  annotations:
+    # TODO: Fill in the client ID after running `tofu apply` in the terraform repo.
+    # Get it with: az identity show -n loki -g equalvote --query clientId -o tsv
+    azure.workload.identity/client-id: "PLACEHOLDER"
+
+deploymentMode: SingleBinary
+
+singleBinary:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 10m
+      memory: 512Mi
+    limits:
+      memory: 512Mi
+  persistence:
+    storageClass: default
+    size: 10Gi
+
+# Disable minio - using Azure Blob Storage
+minio:
+  enabled: false
+
+# Disable the gateway (NGINX) - Loki is only accessed within the cluster
+gateway:
+  enabled: false
+
+# Disable canary - not needed for internal-only usage
+lokiCanary:
+  enabled: false
+
+# Disable monitoring components to save resources
+resultsCache:
+  enabled: false
+
+chunksCache:
+  enabled: false
+
+# Zero out replica counts of other deployment modes
+backend:
+  replicas: 0
+read:
+  replicas: 0
+write:
+  replicas: 0
+ingester:
+  replicas: 0
+querier:
+  replicas: 0
+queryFrontend:
+  replicas: 0
+queryScheduler:
+  replicas: 0
+distributor:
+  replicas: 0
+compactor:
+  replicas: 0
+indexGateway:
+  replicas: 0
+bloomPlanner:
+  replicas: 0
+bloomBuilder:
+  replicas: 0
+bloomGateway:
+  replicas: 0

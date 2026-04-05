@@ -48,17 +48,16 @@ alertmanager:
     - name: "slack"
       # https://prometheus.io/docs/alerting/latest/configuration/#slack_config
       slack_configs:
-      - api_url_file: /etc/prometheus-secrets/alertmanager-slack/slack_webhook_url
+      - api_url_file: /etc/alertmanager/secrets/alertmanager-slack/slack_webhook_url
         channel: "#_bettervoting"
         send_resolved: true
         # TODO: Should we enable this?
         # https://prometheus.io/docs/alerting/latest/notification_examples/#ranging-over-all-received-alerts
         # title: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
         # text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
-  secretMounts:
-  - name: alertmanager-slack
-    secretName: alertmanager-slack
-    mountPath: /etc/prometheus-secrets/alertmanager-slack
+  alertmanagerSpec:
+    secrets:
+    - alertmanager-slack
   ingress:
     enabled: true
     annotations:
@@ -112,12 +111,9 @@ grafana:
   admin:
     existingSecret: grafana
   additionalDataSources:
-  - name: victoria-logs
-    type: vali
-    url: http://victoria-logs-single.victoria-logs-single:9428
-  # - name: loki
-  #   type: loki
-  #   url: http://loki:3100
+  - name: loki
+    type: loki
+    url: http://loki.loki:3100
   ingress:
     enabled: true
     annotations:
