@@ -43,7 +43,7 @@ serviceAccount:
   annotations:
     # TODO: Fill in the client ID after running `tofu apply` in the terraform repo.
     # Get it with: az identity show -n loki -g equalvote --query clientId -o tsv
-    azure.workload.identity/client-id: "PLACEHOLDER"
+    azure.workload.identity/client-id: "098d7377-8348-4248-b8fb-d67445dff406"
 
 deploymentMode: SingleBinary
 
