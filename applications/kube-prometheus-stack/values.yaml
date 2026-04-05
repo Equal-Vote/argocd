@@ -86,14 +86,6 @@ prometheus:
           resources:
             requests:
               storage: 1Gi
-    containers:
-      - name: config-reloader
-        resources:
-          requests:
-            cpu: 10m
-            memory: 256Mi
-          limits:
-            memory: 256Mi
   ingress:
     enabled: true
     annotations:
