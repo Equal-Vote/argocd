@@ -1,15 +1,18 @@
-# kubeControllerManager:
-#   enabled: false
-# kubeScheduler:
-#   enabled: false
-# kubeProxy:
-#   enabled: false
+# We can't monitor the Azure AKS control plane services
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
 # defaultRules:
 #   rules:
 #     kubernetesResources: false
 #   disabled:
 #     InfoInhibitor: true
 #     KubeVersionMismatch: true
+
 nodeExporter:
   resources:
     requests:
