@@ -39,10 +39,14 @@ alertmanager:
       # Uncomment this if alerts are too spammy.
       # group_by: ["alertname"]
       receiver: "slack"
+
+      # Configuring some alerts to go into the void...
       routes:
       - receiver: 'null'
         matchers:
           - alertname = "InfoInhibitor"
+          - alertname = "Watchdog"
+
     receivers:
     - name: "null"
     - name: "slack"
