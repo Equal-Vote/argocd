@@ -44,7 +44,10 @@ alertmanager:
       routes:
       - receiver: 'null'
         matchers:
-          - alertname = "(InfoInhibitor|Watchdog)"
+          - alertname = "InfoInhibitor"
+      - receiver: 'null'
+        matchers:
+          - alertname = "Watchdog"
 
     receivers:
     - name: "null"
