@@ -1,0 +1,18 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "logging"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "fluent-bit",
+        "chartName": "fluent-bit",
+        "chartURL": "https://fluent.github.io/helm-charts",
+        "revision": "0.57.2",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "core"
+    }
+}
