@@ -6,13 +6,6 @@ kubeScheduler:
 kubeProxy:
   enabled: false
 
-# defaultRules:
-#   rules:
-#     kubernetesResources: false
-#   disabled:
-#     InfoInhibitor: true
-#     KubeVersionMismatch: true
-
 nodeExporter:
   resources:
     requests:
@@ -46,6 +39,10 @@ alertmanager:
       # Uncomment this if alerts are too spammy.
       # group_by: ["alertname"]
       receiver: "slack"
+      routes:
+      - receiver: 'null'
+        matchers:
+          - alertname = "InfoInhibitor"
     receivers:
     - name: "null"
     - name: "slack"
