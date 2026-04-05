@@ -1,0 +1,28 @@
+config:
+  clients:
+    - url: http://loki.loki:3100/loki/api/v1/push
+      tls_config:
+        insecure_skip_verify: false
+  snippets:
+    pipelineStages:
+      - docker: {}
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z)\s+(?P<level>\w+)\s+(?P<message>.*)$'
+      - labels:
+          level:
+          namespace:
+          pod:
+
+promtail:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+# Enable serviceMonitor for Prometheus scraping
+serviceMonitor:
+  enabled: true
+  labels:
+    release: kube-prometheus-stack

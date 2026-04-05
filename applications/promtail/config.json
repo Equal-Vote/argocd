@@ -1,0 +1,18 @@
+{
+    "cluster": {
+        "name": "in-cluster",
+        "namespace": "promtail"
+    },
+    "argocd": {
+        "project": "default"
+    },
+    "application": {
+        "name": "promtail",
+        "chartName": "promtail",
+        "chartURL": "https://grafana.github.io/helm-charts",
+        "revision": "6.17.1",
+        "valuesURL": "https://github.com/Equal-Vote/argocd.git",
+        "valuesRevision": "HEAD",
+        "phase": "core"
+    }
+}
