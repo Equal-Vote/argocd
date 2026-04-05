@@ -67,9 +67,9 @@ minio:
 gateway:
   enabled: false
 
-# Disable canary - not needed for internal-only usage
+# Note: The Loki Helm chart requires canary to be enabled
 lokiCanary:
-  enabled: false
+  enabled: true
 
 # Disable monitoring components to save resources
 resultsCache:
