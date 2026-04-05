@@ -1,7 +1,7 @@
 {
     "cluster": {
         "name": "in-cluster",
-        "namespace": "logging"
+        "namespace": "fluent-bit"
     },
     "argocd": {
         "project": "default"
