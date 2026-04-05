@@ -9,7 +9,7 @@
     "application": {
         "name": "fluent-bit",
         "chartName": "fluent-bit",
-        "chartURL": "https://fluent.github.io/helm-charts",
+        "chartURL": "oci://fluent/fluent-bit-chart",
         "revision": "0.57.2",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
         "valuesRevision": "HEAD",

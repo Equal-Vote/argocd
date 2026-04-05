@@ -1,0 +1,5 @@
+# dyff between <(yq . <(helm show values oci://fluent/fluent-bit-chart --version 0.57.2)) <(yq eval '. * load("values.yaml")' <(helm show values oci://fluent/fluent-bit-chart --version 0.57.2))
+# vim -O <(helm show values oci://fluent/fluent-bit-chart --version 0.57.2) values.yaml
+
+prometheusRule:
+  enabled: true
