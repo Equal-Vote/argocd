@@ -16,3 +16,10 @@ config:
         Port                 3100
         Labels               job=fluent-bit-host
         Line_Format          json
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 100Mi
+  limits:
+    memory: 100Mi

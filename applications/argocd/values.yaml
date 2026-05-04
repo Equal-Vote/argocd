@@ -30,18 +30,17 @@ server:
   resources:
     requests:
       cpu: 10m
-      memory: 256Mi
+      memory: 100Mi
     limits:
-      memory: 256Mi
+      memory: 100Mi
 
 repoServer:
   resources:
     requests:
-      cpu: 72m
-      memory: 512Mi
-    # TODO: I keep raising the limit, and it keeps getting OOMKilled. I don't know what the limit needs to be. Disabling for now.
-    # limits:
-    #   memory: 512Mi
+      cpu: 10m
+      memory: 272Mi
+    limits:
+      memory: 272Mi
   podLabels:
     azure.workload.identity/use: "true"
 
@@ -141,10 +140,10 @@ repoServer:
 applicationController:
   resources:
     requests:
-      cpu: 181m
-      memory: 1081Mi
+      cpu: 59m
+      memory: 685Mi
     limits:
-      memory: 1081Mi
+      memory: 685Mi
 
 notificationsController:
   resources:
@@ -173,7 +172,7 @@ redis:
 applicationSet:
   resources:
     requests:
-      cpu: 96m
+      cpu: 10m
       memory: 100Mi
     limits:
       memory: 100Mi

@@ -51,14 +51,22 @@ serviceAccount:
 
 deploymentMode: SingleBinary
 
+sidecar:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      memory: 100Mi
+
 singleBinary:
   replicas: 1
   resources:
     requests:
-      cpu: 10m
-      memory: 512Mi
+      cpu: 28m
+      memory: 231Mi
     limits:
-      memory: 512Mi
+      memory: 231Mi
   persistence:
     storageClass: default
     size: 10Gi
@@ -74,6 +82,12 @@ gateway:
 # Note: The Loki Helm chart requires canary to be enabled
 lokiCanary:
   enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      memory: 100Mi
 
 # Disable monitoring components to save resources
 resultsCache:

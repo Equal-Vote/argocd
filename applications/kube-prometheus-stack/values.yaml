@@ -24,9 +24,9 @@ prometheusOperator:
   resources:
     requests:
       cpu: 10m
-      memory: 323Mi
+      memory: 100Mi
     limits:
-      memory: 323Mi
+      memory: 100Mi
 alertmanager:
   resources:
     requests:
@@ -62,6 +62,12 @@ alertmanager:
         # title: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
         # text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
   alertmanagerSpec:
+    configReloaderResources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        memory: 100Mi
     secrets:
     - alertmanager-slack
   ingress:
@@ -79,6 +85,12 @@ alertmanager:
       - alertmanager.prod.equal.vote
 prometheus:
   prometheusSpec:
+    resources:
+      requests:
+        cpu: 76m
+        memory: 640Mi
+      limits:
+        memory: 640Mi
     storage:
       enabled: true
       volumeClaimTemplate:
@@ -103,9 +115,16 @@ grafana:
   resources:
     requests:
       cpu: 10m
-      memory: 384Mi
+      memory: 232Mi
     limits:
-      memory: 384Mi
+      memory: 232Mi
+  sidecar:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        memory: 100Mi
   admin:
     existingSecret: grafana
   additionalDataSources:
