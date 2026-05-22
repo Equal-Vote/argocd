@@ -11,7 +11,6 @@
         "chartName": "kube-prometheus-stack",
         "chartURL": "https://prometheus-community.github.io/helm-charts",
         "phase": "core",
-        "prune": true,
         "revision": "82.17.1",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
         "valuesRevision": "HEAD"

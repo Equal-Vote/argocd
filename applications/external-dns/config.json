@@ -11,7 +11,6 @@
         "chartName": "external-dns",
         "chartURL": "https://kubernetes-sigs.github.io/external-dns",
         "phase": "initial",
-        "prune": true,
         "revision": "1.20.0",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
         "valuesRevision": "HEAD"
