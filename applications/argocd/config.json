@@ -4,6 +4,7 @@
     "chartURL": "https://argoproj.github.io/argo-helm",
     "name": "argocd",
     "phase": "core",
+    "prune": true,
     "revision": "7.7.16",
     "valuesRevision": "HEAD",
     "valuesURL": "https://github.com/Equal-Vote/argocd.git"

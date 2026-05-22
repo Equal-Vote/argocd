@@ -10,9 +10,10 @@
         "name": "postgresql",
         "chartName": "postgresql",
         "chartURL": "https://charts.bitnami.com/bitnami",
+        "phase": "post",
+        "prune": false,
         "revision": "15.2.9",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
-        "valuesRevision": "HEAD",
-        "phase": "post"
+        "valuesRevision": "HEAD"
     }
 }

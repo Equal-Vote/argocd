@@ -10,9 +10,10 @@
         "name": "loki",
         "chartName": "loki",
         "chartURL": "https://grafana-community.github.io/helm-charts",
+        "phase": "core",
+        "prune": false,
         "revision": "9.5.4",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
-        "valuesRevision": "HEAD",
-        "phase": "core"
+        "valuesRevision": "HEAD"
     }
 }
