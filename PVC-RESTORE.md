@@ -183,7 +183,7 @@ spec:
   capacity:
     storage: 10Gi
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   csi:
@@ -197,7 +197,7 @@ metadata:
   name: pvc-inspect
 spec:
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
@@ -245,7 +245,7 @@ spec:
   capacity:
     storage: 8Gi
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   csi:
@@ -259,7 +259,7 @@ metadata:
   name: pvc-inspect
 spec:
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 8Gi
