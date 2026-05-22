@@ -166,16 +166,13 @@ Repeat for each original disk (3 total).
 
 ## 7. Identify Which Restored Disk Belongs to Which Workload
 
-**Loki (10GiB)** is easy — it contains `chunks/`, `index/`, `wal/`
-directories. Attach it to a busybox pod as shown below and `ls`.
+Mount the disk read-only with a busybox pod and inspect its content without
+writing anything.
 
-**The two 8GiB disks** are both Bitnami PostgreSQL and have identical directory
-layouts. Attempting to `ls` the data directory won't distinguish them. Instead,
-run a temporary PostgreSQL pod that mounts the restored disk and queries the
-catalogs:
+**Loki (10GiB):** contains `chunks/`, `index/`, `wal/` directories — just `ls`:
 
 ```bash
-RESTORED_DISK="<restored-disk-name>"   # e.g. pvc-56229c63-...-restored
+RESTORED_DISK="<loki-restored-disk-name>"
 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -184,9 +181,9 @@ metadata:
   name: pv-inspect
 spec:
   capacity:
-    storage: 8Gi
+    storage: 10Gi
   accessModes:
-    - ReadWriteOnce
+    - ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   csi:
@@ -198,10 +195,71 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: pvc-inspect
-  namespace: default
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 10Gi
+  volumeName: pv-inspect
+  storageClassName: ""
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pg-inspect
+spec:
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: pvc-inspect
+        readOnly: true
+  containers:
+    - name: inspect
+      image: busybox
+      command: ["ls", "/data"]
+      volumeMounts:
+        - name: data
+          mountPath: /data
+          readOnly: true
+  restartPolicy: Never
+EOF
+
+kubectl logs pg-inspect
+kubectl delete pod,pvc,pv pg-inspect pvc-inspect pv-inspect
+```
+
+**PostgreSQL (8GiB):** both disks have the same directory layout, but the
+database names are embedded in the `pg_database` catalog file (`global/1260`).
+Use `strings` — no server startup, no writes:
+
+```bash
+RESTORED_DISK="<postgres-restored-disk-name>"
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-inspect
+spec:
+  capacity:
+    storage: 8Gi
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  csi:
+    driver: disk.csi.azure.com
+    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/${RESTORED_DISK}
+    fsType: ext4
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-inspect
+spec:
+  accessModes:
+    - ReadOnlyMany
   resources:
     requests:
       storage: 8Gi
@@ -212,46 +270,38 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: pg-inspect
-  namespace: default
 spec:
   volumes:
     - name: data
       persistentVolumeClaim:
         claimName: pvc-inspect
+        readOnly: true
   containers:
-    - name: postgres
-      image: bitnamilegacy/postgresql:16
+    - name: inspect
+      image: busybox
       command:
-        - /opt/bitnami/scripts/postgresql/entrypoint.sh
-        - /opt/bitnami/scripts/postgresql/run.sh
-      env:
-        - name: POSTGRESQL_USERNAME
-          value: inspect
-        - name: POSTGRESQL_PASSWORD
-          value: inspect
-        - name: POSTGRESQL_DATABASE
-          value: inspect
-        - name: POSTGRESQL_POSTGRES_PASSWORD
-          value: inspect
+        - sh
+        - -c
+        - strings /data/global/1260 | grep -v '^[0-9]*$' | sort -u
       volumeMounts:
         - name: data
-          mountPath: /bitnami/postgresql
+          mountPath: /data
+          readOnly: true
   restartPolicy: Never
 EOF
 
-kubectl wait --for=condition=ready pod/pg-inspect -n default --timeout=60s
-kubectl exec pg-inspect -n default -- psql -U postgres -c "\l"
-kubectl delete pod,pvc,pv -n default pg-inspect pvc-inspect pv-inspect
+kubectl logs pg-inspect
+kubectl delete pod,pvc,pv pg-inspect pvc-inspect pv-inspect
 ```
 
-The `\l` output lists databases. Identify each disk:
+Identify each disk from the output:
 
-| `\l` output contains            | This disk belongs to             |
-| ------------------------------- | -------------------------------- |
-| `starvote`                      | PostgreSQL (`starvote`)          |
-| `bitnami_keycloak` / `keycloak` | Keycloak PostgreSQL (`keycloak`) |
+| `strings` output contains | This disk belongs to             |
+| ------------------------- | -------------------------------- |
+| `starvote`                | PostgreSQL (`starvote`)          |
+| `bitnami_keycloak`        | Keycloak PostgreSQL (`keycloak`) |
 
-Repeat for the other 8GiB disk and Loki (10GiB, inspect via busybox `ls`).
+Repeat for the other 8GiB disk.
 
 ## 8. Delete Current PVCs and Their Empty Disks
 
