@@ -1,12 +1,15 @@
 # PVC Restore from Azure Disk Backup
 
-Procedure to restore PVCs from Azure Disk Backup snapshots after inadvertent deletion/recreation.
+Procedure to restore PVCs from Azure Disk Backup snapshots after PVCs were
+deleted and re-created, leaving new empty disks in place.
+
+The backup vault (`equalvote-backup-vault`) still holds recovery points for the
+**original** (deleted) disks — those are what we restore.
 
 ## 1. Suspend ArgoCD Sync
 
-Prevent ArgoCD from detecting the manual PV/PVC changes and attempting to reconcile (even with `prune: false`, auto-sync can still cause issues).
-
-These apps are multi-source, so `argocd app set` requires `--source-pos`. Use `kubectl patch` instead:
+Prevent ArgoCD from reconciling during the restore. These apps are multi-source,
+so use `kubectl patch`:
 
 ```bash
 for APP in postgresql keycloak loki kube-prometheus-stack; do
@@ -15,56 +18,107 @@ for APP in postgresql keycloak loki kube-prometheus-stack; do
 done
 ```
 
-> Re-enable sync after restore by restoring the original syncPolicy, or with `argocd app set <app> --sync-policy automated --auto-prune=false --source-pos 0` for multi-source apps.
+> Re-enable later with `--sync-policy automated --auto-prune=false --source-pos 0`.
 
-## 2. Disk to Workload Mapping
+## 2. Scale Down Workloads
 
-Run this in the cluster to map Azure disk IDs to PVCs:
+Stop pods so PVCs can be swapped:
 
 ```bash
-kubectl get pv -o json | jq -r '
-  .items[] | select(.spec.azureDisk or .spec.csi.driver == "disk.csi.azure.com") |
-  "\(.metadata.name) → \(.spec.claimRef.namespace)/\(.spec.claimRef.name)  size=\(.spec.capacity.storage)"'
+kubectl scale statefulset -n starvote postgresql --replicas=0
+kubectl scale statefulset -n keycloak keycloak-postgresql --replicas=0
+kubectl scale statefulset -n loki loki --replicas=0
 ```
 
-Expected mapping (from repo config):
+> Scale back up after restore.
 
-| Disk UUID                                  | Workload                    | Namespace  | PVC Name (Bitnami pattern) | Size |
-| ------------------------------------------ | --------------------------- | ---------- | -------------------------- | ---- |
-| `pvc-3cd6e8ba-fb7f-4031-a69d-e5cd96e8efba` | PostgreSQL (starvote)       | `starvote` | `data-postgresql-0`        | 8Gi  |
-| `pvc-56229c63-fd75-49d0-8f6b-7ce7d107bc68` | Keycloak bundled PostgreSQL | `keycloak` | `data-postgresql-0`        | 8Gi  |
-| `pvc-7d5e2740-7f0a-4115-acbe-b84975edf773` | Loki                        | `loki`     | `loki-<statefulset>-0`     | 10Gi |
+## 3. List Current PVCs and Their New (Empty) Disk IDs
 
-> Verify PVC names with `kubectl get pvc -A` — Bitnami charts name PVCs `data-<release>-<replica>-0`.
-
-## 3. Find the Latest Recovery Point
+Identify the empty PVCs that need to be replaced:
 
 ```bash
-DISKS=(
-  "pvc-3cd6e8ba-fb7f-4031-a69d-e5cd96e8efba"
-  "pvc-56229c63-fd75-49d0-8f6b-7ce7d107bc68"
-  "pvc-7d5e2740-7f0a-4115-acbe-b84975edf773"
-)
+kubectl get pvc -A -o custom-columns=\
+NAMESPACE:.metadata.namespace,\
+NAME:.metadata.name,\
+SIZE:.spec.resources.requests.storage,\
+VOLUME:.spec.volumeName
+```
 
-for DISK in "${DISKS[@]}"; do
-  echo "=== $DISK ==="
+Expected empty PVCs:
+
+| Namespace  | PVC Name            | Size | PV (auto-provisioned) |
+| ---------- | ------------------- | ---- | --------------------- |
+| `starvote` | `data-postgresql-0` | 8Gi  | `pvc-<new-uuid>`      |
+| `keycloak` | `data-postgresql-0` | 8Gi  | `pvc-<new-uuid>`      |
+| `loki`     | `data-loki-0`       | 10Gi | `pvc-<new-uuid>`      |
+
+Record the PV names — you need to delete them (they point to the empty disks).
+
+## 4. Identify Original (Deleted) Disks in the Backup Vault
+
+The backup instances are named after the original disk UUIDs. List them all:
+
+```bash
+az backup container list \
+  --vault-name equalvote-backup-vault \
+  --resource-group equalvote \
+  --backup-management-type AzureWorkload \
+  --query "[].{name:name, status:properties.healthStatus}" \
+  -o table
+```
+
+For each container (disk), list its recovery points and disk size:
+
+```bash
+az backup recoverypoint list \
+  --vault-name equalvote-backup-vault \
+  --resource-group equalvote \
+  --backup-management-type AzureWorkload \
+  --container-name "<disk-name>" \
+  --item-name "<disk-name>" \
+  --query "[*].{rp:name, time:properties.recoveryPointTime, size:properties.recoveryPointSizeInBytes}" \
+  -o table
+```
+
+Get only the latest recovery point per disk:
+
+```bash
+for CONTAINER in $(az backup container list \
+  --vault-name equalvote-backup-vault \
+  --resource-group equalvote \
+  --backup-management-type AzureWorkload \
+  --query "[].name" -o tsv); do
+
+  echo "=== $CONTAINER ==="
   az backup recoverypoint list \
     --vault-name equalvote-backup-vault \
     --resource-group equalvote \
     --backup-management-type AzureWorkload \
-    --container-name "$DISK" \
-    --query "max_by([], &properties.recoveryPointTime).{name:name, time:properties.recoveryPointTime}" \
+    --container-name "$CONTAINER" \
+    --item-name "$CONTAINER" \
+    --query "max_by([], &properties.recoveryPointTime).{rp:name, time:properties.recoveryPointTime, size:properties.recoveryPointSizeInBytes}" \
     -o tsv
 done
 ```
 
-## 4. Restore a Disk from Snapshot
+## 5. Map Original Disks to Workloads by Size
 
-For each disk to restore, create a new managed disk from the latest recovery point:
+Use the recovery point size (or original disk size) to identify each disk:
+
+- **10 GiB** → Loki (`loki`)
+- **8 GiB** → PostgreSQL or Keycloak PostgreSQL
+
+For the two 8 GiB disks, distinguish them after restoring (see step 7), or
+check the volume label/uuid against the cluster's old PV records.
+
+## 6. Restore a Disk from Snapshot
+
+For each original disk, create a new managed disk from its latest recovery
+point:
 
 ```bash
-DISK_NAME="pvc-3cd6e8ba-fb7f-4031-a69d-e5cd96e8efba"
-RP_ID="<recovery-point-name-from-above>"
+DISK_NAME="<original-disk-uuid-from-step-4>"
+RP_ID="<latest-rp-name-from-step-4>"
 RESTORED_DISK_NAME="${DISK_NAME}-restored"
 NODE_RG="MC_equalvote_equalvote_westus2"
 
@@ -82,7 +136,96 @@ az backup restore restore-disks \
 
 This creates a disk named `pvc-<uuid>-restored` in `MC_equalvote_equalvote_westus2`.
 
-## 5. Create PV + PVC Backed by Restored Disk
+Repeat for each original disk (3 total).
+
+## 7. Identify Which Restored Disk Belongs to Which Workload
+
+Restored disks are offline (not attached). Mount one at a time to inspect its
+content:
+
+```bash
+# Create a temporary VM (or use an existing node's mount). Simpler: attach to
+# an existing node pod that has hostPath access.
+
+# Or, inspect by creating a temporary PV/PVC + debug pod:
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-inspect
+spec:
+  capacity:
+    storage: 10Gi     # match restored disk size
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  csi:
+    driver: disk.csi.azure.com
+    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-name>
+    fsType: ext4
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-inspect
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  volumeName: pv-inspect
+  storageClassName: ""
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-inspect
+  namespace: default
+spec:
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: pvc-inspect
+  containers:
+    - name: inspect
+      image: busybox
+      command: ["sh", "-c", "ls -la /data && sleep 10"]
+      volumeMounts:
+        - name: data
+          mountPath: /data
+EOF
+
+kubectl logs pod-inspect
+```
+
+**Loki** contains `chunks`, `index`, `wal` directories.
+**PostgreSQL** contains `PG_VERSION`, `base/`, `global/` directories.
+
+Once identified, clean up the inspect pod/PV/PVC.
+
+## 8. Delete Current PVCs and Their Empty Disks
+
+For each workload, delete the current PVC (which cascades to delete the empty
+Azure disk — the CSI driver's default reclaim policy is Delete):
+
+```bash
+# Delete PVCs (this also deletes the empty Azure disks)
+kubectl delete pvc -n starvote data-postgresql-0
+kubectl delete pvc -n keycloak data-postgresql-0
+kubectl delete pvc -n loki data-loki-0
+
+# Delete the orphaned PVs that were bound to those PVCs
+kubectl delete pv <pv-name-from-step-3>     # starvote postgresql
+kubectl delete pv <pv-name-from-step-3>     # keycloak postgresql
+kubectl delete pv <pv-name-from-step-3>     # loki
+```
+
+> Confirm the empty Azure disks are gone: `az disk list -g MC_equalvote_equalvote_westus2 --query "[].name" -o table`
+
+## 9. Create New PVs Backed by Restored Disks
 
 **PostgreSQL (starvote):**
 
@@ -100,7 +243,7 @@ spec:
   storageClassName: managed-csi
   csi:
     driver: disk.csi.azure.com
-    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/pvc-3cd6e8ba-fb7f-4031-a69d-e5cd96e8efba-restored
+    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-uuid-for-postgresql>
     fsType: ext4
 ---
 apiVersion: v1
@@ -134,7 +277,7 @@ spec:
   storageClassName: managed-csi
   csi:
     driver: disk.csi.azure.com
-    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/pvc-56229c63-fd75-49d0-8f6b-7ce7d107bc68-restored
+    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-uuid-for-keycloak>
     fsType: ext4
 ---
 apiVersion: v1
@@ -168,13 +311,13 @@ spec:
   storageClassName: managed-csi
   csi:
     driver: disk.csi.azure.com
-    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/pvc-7d5e2740-7f0a-4115-acbe-b84975edf773-restored
+    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-uuid-for-loki>
     fsType: ext4
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: loki-<statefulset>-0  # replace with actual name from `kubectl get pvc -n loki`
+  name: data-loki-0
   namespace: loki
 spec:
   accessModes:
@@ -186,18 +329,29 @@ spec:
   storageClassName: ""
 ```
 
-Apply and restart the pod:
+Apply them:
 
 ```bash
-kubectl apply -f restore-<workload>.yaml
-kubectl delete pod -n <namespace> <pod-name>
+kubectl apply -f restored-pvcs.yaml
 ```
 
-The pod will re-create and pick up the restored PV.
+## 10. Scale Workloads Back Up
 
-## 6. Re-enable ArgoCD Sync
+```bash
+kubectl scale statefulset -n starvote postgresql --replicas=1
+kubectl scale statefulset -n keycloak keycloak-postgresql --replicas=1
+kubectl scale statefulset -n loki loki --replicas=1
+```
 
-Once all PVCs are restored and pods are healthy, re-enable auto-sync:
+Verify each pod mounts the restored PVC and starts without errors:
+
+```bash
+kubectl logs -n starvote postgresql-0 --tail=20
+kubectl logs -n keycloak keycloak-postgresql-0 --tail=20
+kubectl logs -n loki loki-0 --tail=20
+```
+
+## 11. Re-enable ArgoCD Sync
 
 ```bash
 for APP in postgresql keycloak loki kube-prometheus-stack; do
@@ -206,12 +360,15 @@ for APP in postgresql keycloak loki kube-prometheus-stack; do
 done
 ```
 
-The exact syncPolicy values should match what's in `applications/<app>/config.json`.
-
 ## Caveats
 
-- **Crash-consistent snapshots.** Azure Disk Backup does not quiesce the filesystem. PostgreSQL data may require WAL replay on startup, which usually succeeds. For critical restores, consider `pg_start_backup()` / `pg_stop_backup()` during the backup window.
-- **Region / zone.** Restored disks land in the same region (West US 2). If your AKS node pool uses availability zones, you may need to specify a zone in the restore command or create the PV with a `topology` constraint.
-- **Orphaned disks.** If the PVC was re-created by Helm, the old disk (with original data) still exists in `MC_equalvote_equalvote_westus2` but is no longer bound. Verify which disk is current before restoring.
-- **Retain policy.** The PV uses `persistentVolumeReclaimPolicy: Retain` to prevent accidental deletion.
+- **Crash-consistent snapshots.** Azure Disk Backup does not quiesce the
+  filesystem. PostgreSQL may require WAL replay on startup; this usually
+  succeeds but verify logs.
+- **Region / zone.** Restored disks land in the same region (West US 2). If
+  your AKS node pool uses availability zones, specify one or add a topology
+  constraint to the PV.
+- **Reclaim policy.** The PV uses `Retain` to prevent accidental deletion.
 - **`storageClassName: ""`** on the PVC is required to bind to an existing PV.
+- **StatefulSet PVC naming.** Bitnami PostgreSQL creates PVCs named
+  `data-<release>-0`. Confirm the exact name with `kubectl get pvc -A`.
