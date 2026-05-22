@@ -4,18 +4,9 @@ Procedure to restore PVCs from Azure Disk Backup snapshots after inadvertent del
 
 ## 1. Suspend ArgoCD Sync
 
-Prevent ArgoCD from detecting the manual PV/PVC changes and attempting to reconcile (even with `prune: false`, auto-sync can still cause issues):
+Prevent ArgoCD from detecting the manual PV/PVC changes and attempting to reconcile (even with `prune: false`, auto-sync can still cause issues).
 
-```bash
-APPS=("postgresql" "keycloak" "loki" "kube-prometheus-stack")
-
-for APP in "${APPS[@]}"; do
-  argocd app get "$APP" -o json | jq -r '.status.sync.status' && \
-    argocd app set "$APP" --sync-policy none
-done
-```
-
-If you don't have the `argocd` CLI, patch the Application resources directly via the ArgoCD Kubernetes API:
+These apps are multi-source, so `argocd app set` requires `--source-pos`. Use `kubectl patch` instead:
 
 ```bash
 for APP in postgresql keycloak loki kube-prometheus-stack; do
@@ -24,7 +15,7 @@ for APP in postgresql keycloak loki kube-prometheus-stack; do
 done
 ```
 
-> Re-enable sync after restore with `argocd app set <app> --sync-policy automated --auto-prune=false` or by restoring the original syncPolicy via `kubectl patch`.
+> Re-enable sync after restore by restoring the original syncPolicy, or with `argocd app set <app> --sync-policy automated --auto-prune=false --source-pos 0` for multi-source apps.
 
 ## 2. Disk to Workload Mapping
 
@@ -210,11 +201,12 @@ Once all PVCs are restored and pods are healthy, re-enable auto-sync:
 
 ```bash
 for APP in postgresql keycloak loki kube-prometheus-stack; do
-  argocd app set "$APP" --sync-policy automated --auto-prune=false
+  kubectl patch application "$APP" -n argocd --type merge \
+    -p '{"spec":{"syncPolicy":{"automated":{"prune":false,"selfHeal":true}}}}'
 done
 ```
 
-Or via `kubectl patch` (restoring the original syncPolicy from `applications/<app>/config.json`).
+The exact syncPolicy values should match what's in `applications/<app>/config.json`.
 
 ## Caveats
 
