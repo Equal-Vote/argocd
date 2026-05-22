@@ -69,8 +69,7 @@ Setup scripts: `utils/workload-identity.sh`, README sections for external-dns an
 Defined per-app in `config.json` via the `prune` field. Managed by ApplicationSet template at `applications/applicationset.yaml:30`.
 
 - All apps **auto-sync** with `selfHeal: true`
-- `prune: false` on stateful apps with PVCs: **keycloak**, **loki**, **postgresql**
-- `prune: true` on all other apps
+- `prune: false` on **all** apps (universal default to protect PVCs)
 - cert-manager bootstrap app: `selfHeal: false` (defined in `application.yaml:67`)
 - `syncOptions: [CreateNamespace=true, ServerSideApply=true]` on all apps
 
