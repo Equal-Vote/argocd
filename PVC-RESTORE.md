@@ -337,7 +337,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: managed-csi
+  storageClassName: ""
   csi:
     driver: disk.csi.azure.com
     volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-uuid-for-postgresql>
@@ -371,7 +371,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: managed-csi
+  storageClassName: ""
   csi:
     driver: disk.csi.azure.com
     volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-uuid-for-keycloak>
@@ -405,7 +405,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: managed-csi
+  storageClassName: ""
   csi:
     driver: disk.csi.azure.com
     volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-uuid-for-loki>
