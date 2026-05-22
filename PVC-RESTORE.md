@@ -56,85 +56,111 @@ Record the PV names — you need to delete them (they point to the empty disks).
 
 ## 4. Identify Original (Deleted) Disks in the Backup Vault
 
-The backup instances are named after the original disk UUIDs. List them all:
+The vault (`equalvote-backup-vault`) is a Data Protection backup vault — use
+`az dataprotection` commands, not `az backup`.
+
+List all backup instances (named after the original disk UUIDs):
 
 ```bash
-az backup container list \
+az dataprotection backup-instance list \
   --vault-name equalvote-backup-vault \
   --resource-group equalvote \
-  --backup-management-type AzureWorkload \
-  --query "[].{name:name, status:properties.healthStatus}" \
+  --query "[].{name:name, status:properties.currentProtectionState}" \
   -o table
 ```
 
-For each container (disk), list its recovery points and disk size:
+Expected output — three original disks that were being backed up before deletion:
 
-```bash
-az backup recoverypoint list \
-  --vault-name equalvote-backup-vault \
-  --resource-group equalvote \
-  --backup-management-type AzureWorkload \
-  --container-name "<disk-name>" \
-  --item-name "<disk-name>" \
-  --query "[*].{rp:name, time:properties.recoveryPointTime, size:properties.recoveryPointSizeInBytes}" \
-  -o table
+```
+Name                                      Status
+----------------------------------------  --------------------
+pvc-3cd6e8ba-fb7f-4031-a69d-e5cd96e8efba  ProtectionConfigured
+pvc-56229c63-fd75-49d0-8f6b-7ce7d107bc68  ProtectionConfigured
+pvc-7d5e2740-7f0a-4115-acbe-b84975edf773  ProtectionConfigured
 ```
 
-Get only the latest recovery point per disk:
+For each backup instance, find the latest recovery point and the disk size
+(stored as JSON in the recovery point metadata):
 
 ```bash
-for CONTAINER in $(az backup container list \
+for INSTANCE in $(az dataprotection backup-instance list \
   --vault-name equalvote-backup-vault \
   --resource-group equalvote \
-  --backup-management-type AzureWorkload \
   --query "[].name" -o tsv); do
 
-  echo "=== $CONTAINER ==="
-  az backup recoverypoint list \
+  RP_ID=$(az dataprotection recovery-point list \
+    --backup-instance-name "$INSTANCE" \
     --vault-name equalvote-backup-vault \
     --resource-group equalvote \
-    --backup-management-type AzureWorkload \
-    --container-name "$CONTAINER" \
-    --item-name "$CONTAINER" \
-    --query "max_by([], &properties.recoveryPointTime).{rp:name, time:properties.recoveryPointTime, size:properties.recoveryPointSizeInBytes}" \
-    -o tsv
+    --query "max_by([], &properties.recoveryPointTime).name" -o tsv)
+
+  META=$(az dataprotection recovery-point show \
+    --backup-instance-name "$INSTANCE" \
+    --vault-name equalvote-backup-vault \
+    --resource-group equalvote \
+    --recovery-point-id "$RP_ID" \
+    --query "properties.recoveryPointDataStoresDetails[0].metaData" -o tsv)
+
+  SIZE=$(echo "$META" | python3 -c "
+import sys, json
+d = json.loads(sys.stdin.read())[0]
+print(f\"{d['sizeBytes'] / 1024**3:.0f}GiB\")
+")
+
+  echo "$INSTANCE  latest=$RP_ID  size=$SIZE"
 done
 ```
 
 ## 5. Map Original Disks to Workloads by Size
 
-Use the recovery point size (or original disk size) to identify each disk:
+The recovery point metadata reveals the disk size. Use it to identify each
+workload:
 
-- **10 GiB** → Loki (`loki`)
-- **8 GiB** → PostgreSQL or Keycloak PostgreSQL
+| Size  | Workload                    | Namespace  |
+| ----- | --------------------------- | ---------- |
+| 8GiB  | PostgreSQL (starvote)       | `starvote` |
+| 8GiB  | Keycloak bundled PostgreSQL | `keycloak` |
+| 10GiB | Loki                        | `loki`     |
 
-For the two 8 GiB disks, distinguish them after restoring (see step 7), or
-check the volume label/uuid against the cluster's old PV records.
+> The two 8GiB disks are both Bitnami PostgreSQL and cannot be distinguished by
+> size alone. After restoring one, mount it to inspect (step 7) — **PostgreSQL**
+> contains `PG_VERSION`, `base/`, `global/`; **Keycloak** contains a `keycloak`
+> database in `base/`.
 
 ## 6. Restore a Disk from Snapshot
 
-For each original disk, create a new managed disk from its latest recovery
-point:
+For each original disk, restore its latest recovery point to a new managed disk.
+The Data Protection API uses a two-step process: initialize the restore request
+JSON, then trigger the restore.
 
 ```bash
-DISK_NAME="<original-disk-uuid-from-step-4>"
-RP_ID="<latest-rp-name-from-step-4>"
-RESTORED_DISK_NAME="${DISK_NAME}-restored"
-NODE_RG="MC_equalvote_equalvote_westus2"
+INSTANCE="<original-disk-uuid-from-step-4>"
+RP_ID="<latest-rp-id-from-step-4>"
+RESTORED_NAME="${INSTANCE}-restored"
 
-az backup restore restore-disks \
+# 1) Generate the restore request body
+RESTORE_REQUEST=$(az dataprotection backup-instance restore initialize-for-data-recovery \
+  --datasource-type AzureDisk \
+  --restore-location westus2 \
+  --source-datastore OperationalStore \
+  --recovery-point-id "$RP_ID" \
+  --target-resource-id "/subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/$RESTORED_NAME")
+
+# 2) Trigger the restore (--no-wait returns immediately)
+az dataprotection backup-instance restore trigger \
+  --name "$INSTANCE" \
   --vault-name equalvote-backup-vault \
   --resource-group equalvote \
-  --container-name "$DISK_NAME" \
-  --item-name "$DISK_NAME" \
-  --rp-name "$RP_ID" \
-  --target-resource-group "$NODE_RG" \
-  --storage-account "" \
-  --restore-to-managed-disk \
-  --disk-name "$RESTORED_DISK_NAME"
+  --restore-request-object "$RESTORE_REQUEST" \
+  --no-wait
 ```
 
-This creates a disk named `pvc-<uuid>-restored` in `MC_equalvote_equalvote_westus2`.
+This creates a disk named `pvc-<uuid>-restored` in
+`MC_equalvote_equalvote_westus2`. Check progress with:
+
+```bash
+az disk show -g MC_equalvote_equalvote_westus2 -n "$RESTORED_NAME" --query provisioningState
+```
 
 Repeat for each original disk (3 total).
 
@@ -155,7 +181,7 @@ metadata:
   name: pv-inspect
 spec:
   capacity:
-    storage: 10Gi     # match restored disk size
+    storage: <SIZE>   # 8Gi for PostgreSQL disks, 10Gi for Loki
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
@@ -175,7 +201,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: <SIZE>   # must match PV capacity
   volumeName: pv-inspect
   storageClassName: ""
 ---
