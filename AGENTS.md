@@ -2,7 +2,7 @@
 
 **Pure GitOps YAML repo.** No code, no tests, no CI pipelines, no build system. ArgoCD auto-syncs on `git push`.
 
-> **Pre-commit hooks** are managed via `../../devopscoop/dotfiles/3uzbcqje/.pre-commit-config.yaml`. The `check-yaml` hook will reject Go template expressions (`{{...}}`) in raw YAML files. Use `git commit --no-verify` or `SKIP=check-yaml git commit` when editing template-heavy YAML.
+> **Pre-commit hooks** are managed via `../../devopscoop/dotfiles/3uzbcqje/.pre-commit-config.yaml`. The `check-yaml` hook will reject Go template expressions (`{{...}}`) in raw YAML files. Use `SKIP=check-yaml git commit` when editing template-heavy YAML. Do **not** use `git commit --no-verify` without asking permission first.
 
 ## Bootstrap (new cluster)
 
