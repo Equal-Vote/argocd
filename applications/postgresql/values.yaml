@@ -1,3 +1,6 @@
+# dyff between <(yq . <(helm show values bitnami/postgresql --version v15.2.9)) <(yq eval '. * load("values.yaml")' <(helm show values bitnami/postgresql --version v15.2.9))
+# vim -O <(helm show values bitnami/postgresql --version v15.2.9) values.yaml
+
 image:
   repository: bitnamilegacy/postgresql
 volumePermissions:

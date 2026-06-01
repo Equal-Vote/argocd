@@ -1,3 +1,6 @@
+# dyff between <(yq . <(helm show values grafana-community/loki --version v9.5.4)) <(yq eval '. * load("values.yaml")' <(helm show values grafana-community/loki --version v9.5.4))
+# vim -O <(helm show values grafana-community/loki --version v9.5.4) values.yaml
+
 loki:
   # The client_id will need to be filled in after running `tofu apply`.
   # Get it with: tofu output -raw loki_client_id

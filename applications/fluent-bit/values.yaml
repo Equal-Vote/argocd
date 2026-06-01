@@ -1,3 +1,6 @@
+# dyff between <(yq . <(helm show values fluent/fluent-bit --version v0.57.2)) <(yq eval '. * load("values.yaml")' <(helm show values fluent/fluent-bit --version v0.57.2))
+# vim -O <(helm show values fluent/fluent-bit --version v0.57.2) values.yaml
+
 config:
   outputs: |
     [OUTPUT]

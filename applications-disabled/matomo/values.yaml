@@ -1,3 +1,6 @@
+# dyff between <(yq . <(helm show values bitnami/matomo --version v7.0.4)) <(yq eval '. * load("values.yaml")' <(helm show values bitnami/matomo --version v7.0.4))
+# vim -O <(helm show values bitnami/matomo --version v7.0.4) values.yaml
+
 ingress:
   enabled: true
   hostname: "matomo2.prod.equal.vote"

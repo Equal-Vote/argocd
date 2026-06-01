@@ -1,3 +1,6 @@
+# dyff between <(yq . <(helm show values argo/argo-cd --version v7.7.16)) <(yq eval '. * load("values.yaml")' <(helm show values argo/argo-cd --version v7.7.16))
+# vim -O <(helm show values argo/argo-cd --version v7.7.16) values.yaml
+
 # Based on:
 # https://github.com/jkroepke/helm-secrets/wiki/ArgoCD-Integration
 # https://github.com/viaduct-ai/kustomize-sops?tab=readme-ov-file#argo-cd-integration-

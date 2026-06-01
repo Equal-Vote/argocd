@@ -1,3 +1,6 @@
+# dyff between <(yq . <(helm show values ingress-nginx/ingress-nginx --version v4.10.0)) <(yq eval '. * load("values.yaml")' <(helm show values ingress-nginx/ingress-nginx --version v4.10.0))
+# vim -O <(helm show values ingress-nginx/ingress-nginx --version v4.10.0) values.yaml
+
 controller:
 # Newer charts seem to establish externalTrafficPolicy to Cluster instead of Local, breaks in Azure
 # https://github.com/kubernetes/ingress-nginx/issues/10863
