@@ -35,7 +35,6 @@ loki:
     chunk_encoding: snappy
   limits_config:
     allow_structured_metadata: true
-    volume_enabled: true
     retention_period: 672h # 28 days
   compactor:
     retention_enabled: true
@@ -72,11 +71,8 @@ singleBinary:
       memory: 231Mi
   persistence:
     storageClass: default
-    size: 10Gi
 
 # Disable minio - using Azure Blob Storage
-minio:
-  enabled: false
 
 # Disable the gateway (NGINX) - Loki is only accessed within the cluster
 gateway:
@@ -84,7 +80,6 @@ gateway:
 
 # Note: The Loki Helm chart requires canary to be enabled
 lokiCanary:
-  enabled: true
   resources:
     requests:
       cpu: 10m
@@ -105,24 +100,4 @@ backend:
 read:
   replicas: 0
 write:
-  replicas: 0
-ingester:
-  replicas: 0
-querier:
-  replicas: 0
-queryFrontend:
-  replicas: 0
-queryScheduler:
-  replicas: 0
-distributor:
-  replicas: 0
-compactor:
-  replicas: 0
-indexGateway:
-  replicas: 0
-bloomPlanner:
-  replicas: 0
-bloomBuilder:
-  replicas: 0
-bloomGateway:
   replicas: 0
