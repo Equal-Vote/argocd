@@ -1,0 +1,21 @@
+# dyff between <(yq . <(helm show values cnpg/cluster --version 0.7.0)) <(yq eval '. * load("values.yaml")' <(helm show values cnpg/cluster --version 0.7.0))
+# vim -O <(helm show values cnpg/cluster --version 0.7.0) values.yaml
+
+fullnameOverride: fider-db
+type: postgresql
+mode: standalone
+cluster:
+  instances: 1
+  storage:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 10m
+      memory: 256Mi
+    limits:
+      memory: 256Mi
+  initdb:
+    database: fider
+    owner: fider
+backups:
+  enabled: false

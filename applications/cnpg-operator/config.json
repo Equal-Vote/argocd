@@ -1,0 +1,18 @@
+{
+  "cluster": {
+    "name": "in-cluster",
+    "namespace": "cnpg-system"
+  },
+  "application": {
+    "chartName": "cloudnative-pg",
+    "chartURL": "https://cloudnative-pg.github.io/charts",
+    "name": "cnpg-operator",
+    "phase": "core",
+    "revision": "0.28.3",
+    "valuesRevision": "HEAD",
+    "valuesURL": "https://github.com/Equal-Vote/argocd.git"
+  },
+  "argocd": {
+    "project": "default"
+  }
+}

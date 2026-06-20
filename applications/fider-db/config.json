@@ -1,0 +1,18 @@
+{
+  "cluster": {
+    "name": "in-cluster",
+    "namespace": "fider"
+  },
+  "application": {
+    "chartName": "cluster",
+    "chartURL": "https://cloudnative-pg.github.io/charts",
+    "name": "fider-db",
+    "phase": "post",
+    "revision": "0.7.0",
+    "valuesRevision": "HEAD",
+    "valuesURL": "https://github.com/Equal-Vote/argocd.git"
+  },
+  "argocd": {
+    "project": "default"
+  }
+}

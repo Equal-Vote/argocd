@@ -1,0 +1,76 @@
+# dyff between <(yq . <(helm show values oci://registry.gitlab.com/devopscoop/charts/app --version 0.11.0)) <(yq eval '. * load("values.yaml")' <(helm show values oci://registry.gitlab.com/devopscoop/charts/app --version 0.11.0))
+# vim -O <(helm show values oci://registry.gitlab.com/devopscoop/charts/app --version 0.11.0) values.yaml
+
+replicaCount: 1
+image:
+  repository: getfider/fider
+  tag: stable
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: feedback.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: fider-tls
+      hosts:
+        - feedback.example.com
+env:
+  - name: BASE_URL
+    value: "https://feedback.example.com"
+  - name: JWT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: fider
+        key: JWT_SECRET
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: fider
+        key: DATABASE_URL
+  - name: EMAIL_NOREPLY
+    valueFrom:
+      secretKeyRef:
+        name: fider
+        key: EMAIL_NOREPLY
+  - name: EMAIL_SMTP_HOST
+    valueFrom:
+      secretKeyRef:
+        name: fider
+        key: EMAIL_SMTP_HOST
+  - name: EMAIL_SMTP_PORT
+    valueFrom:
+      secretKeyRef:
+        name: fider
+        key: EMAIL_SMTP_PORT
+  - name: EMAIL_SMTP_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: fider
+        key: EMAIL_SMTP_USERNAME
+  - name: EMAIL_SMTP_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: fider
+        key: EMAIL_SMTP_PASSWORD
+  - name: LOG_LEVEL
+    value: "info"
+  - name: BLOB_STORAGE
+    value: "sql"
+service:
+  port: 3000
+resources:
+  requests:
+    cpu: 10m
+    memory: 100Mi
+  limits:
+    memory: 200Mi
+livenessProbe:
+  httpGet:
+    port: 3000
+readinessProbe:
+  httpGet:
+    port: 3000
