@@ -10,17 +10,17 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
   hosts:
-    - host: feedback.example.com
+    - host: feedback.prod.equal.vote
       paths:
         - path: /
           pathType: ImplementationSpecific
   tls:
     - secretName: fider-tls
       hosts:
-        - feedback.example.com
+        - feedback.prod.equal.vote
 env:
   - name: BASE_URL
-    value: "https://feedback.example.com"
+    value: "https://feedback.prod.equal.vote"
   - name: JWT_SECRET
     valueFrom:
       secretKeyRef:
