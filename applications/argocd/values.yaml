@@ -145,9 +145,9 @@ applicationController:
   resources:
     requests:
       cpu: 59m
-      memory: 685Mi
+      memory: 650Mi
     limits:
-      memory: 685Mi
+      memory: 650Mi
 
 notificationsController:
   resources:

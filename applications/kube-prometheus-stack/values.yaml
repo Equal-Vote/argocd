@@ -97,9 +97,9 @@ prometheus:
     resources:
       requests:
         cpu: 76m
-        memory: 640Mi
+        memory: 440Mi
       limits:
-        memory: 640Mi
+        memory: 440Mi
     storage:
       enabled: true
       volumeClaimTemplate:

@@ -29,9 +29,9 @@ tls:
 resources:
   requests:
     cpu: 10m
-    memory: 623Mi
+    memory: 565Mi
   limits:
-    memory: 623Mi
+    memory: 565Mi
 
 postgresql:
   enabled: true

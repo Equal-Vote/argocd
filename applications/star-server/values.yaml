@@ -78,9 +78,9 @@ service:
 resources:
   requests:
     cpu: 10m
-    memory: 125Mi
+    memory: 145Mi
   limits:
-    memory: 125Mi
+    memory: 145Mi
 livenessProbe:
   httpGet:
     port: 5000
