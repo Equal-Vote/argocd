@@ -66,9 +66,9 @@ singleBinary:
   resources:
     requests:
       cpu: 28m
-      memory: 231Mi
+      memory: 512Mi
     limits:
-      memory: 231Mi
+      memory: 512Mi
   persistence:
     storageClass: default
 
