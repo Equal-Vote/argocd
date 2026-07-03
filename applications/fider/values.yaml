@@ -32,13 +32,13 @@ env:
         name: fider
         key: DATABASE_URL
   - name: EMAIL_NOREPLY
-    value: "noreply@example.com"
+    value: "noreply@bettervoting.com"
   - name: EMAIL_SMTP_HOST
-    value: "smtp.example.com"
+    value: "smtp.sendgrid.net"
   - name: EMAIL_SMTP_PORT
     value: "587"
   - name: EMAIL_SMTP_USERNAME
-    value: "user@example.com"
+    value: "apikey"
   - name: EMAIL_SMTP_PASSWORD
     valueFrom:
       secretKeyRef:
