@@ -1,0 +1,2 @@
+# dyff between <(yq . <(helm show values cnpg/cloudnative-pg --version 0.28.3)) <(yq eval '. * load("values.yaml")' <(helm show values cnpg/cloudnative-pg --version 0.28.3))
+# vim -O <(helm show values cnpg/cloudnative-pg --version 0.28.3) values.yaml
