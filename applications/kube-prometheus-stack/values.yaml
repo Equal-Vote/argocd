@@ -9,6 +9,18 @@ kubeScheduler:
 kubeProxy:
   enabled: false
 
+defaultRules:
+  disabled:
+    # AKS puts its apiserver replicas behind a single load-balanced endpoint, so all
+    # of them report as one Prometheus series and their rest_client_requests_total
+    # counters interleave. Every scrape that lands on a replica with a lower counter
+    # than the previous scrape looks like a counter reset, so rate() invents traffic
+    # that never happened. KubeClientErrors divides one such bogus rate by another,
+    # which makes it fire at random. It is scoped to job="apiserver", and that is the
+    # only control plane job we can scrape, so turning it off costs no real coverage.
+    # Genuine apiserver problems still page via KubeAPIDown / KubeAPIErrorBudgetBurn.
+    KubeClientErrors: true
+
 nodeExporter:
   resources:
     requests:
