@@ -26,11 +26,13 @@ env:
       secretKeyRef:
         name: fider
         key: JWT_SECRET
+  # Password is generated and owned by CNPG; reading the connection string
+  # straight from the operator-managed secret keeps it from drifting (see #43).
   - name: DATABASE_URL
     valueFrom:
       secretKeyRef:
-        name: fider
-        key: DATABASE_URL
+        name: fider-db-app
+        key: uri
   - name: EMAIL_NOREPLY
     value: "noreply@bettervoting.com"
   - name: EMAIL_SMTP_HOST
