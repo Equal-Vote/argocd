@@ -26,13 +26,21 @@ env:
       secretKeyRef:
         name: fider
         key: JWT_SECRET
-  # Password is generated and owned by CNPG; reading the connection string
-  # straight from the operator-managed secret keeps it from drifting (see #43).
-  - name: DATABASE_URL
+  # The password is declared in git (secrets/fider-db-secrets.enc.yaml) and
+  # handed to CNPG via cluster.initdb.secret, so the operator no longer
+  # publishes a fider-db-app secret with a ready-made `uri`. Assemble the URL
+  # here instead, injecting the one stored copy of the password via Kubernetes
+  # dependent-env expansion -- FIDER_DB_PASSWORD must stay above DATABASE_URL
+  # for $() to resolve. The password is deliberately alphanumeric: this is
+  # string interpolation, not URL encoding (see #43).
+  # No sslmode, so lib/pq defaults to `require`; CNPG always serves TLS.
+  - name: FIDER_DB_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: fider-db-app
-        key: uri
+        name: fider-db-creds
+        key: password
+  - name: DATABASE_URL
+    value: "postgresql://fider:$(FIDER_DB_PASSWORD)@fider-db-rw.fider:5432/fider"
   - name: EMAIL_NOREPLY
     value: "noreply@bettervoting.com"
   - name: EMAIL_SMTP_HOST
