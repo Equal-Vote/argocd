@@ -6,6 +6,12 @@ type: postgresql
 mode: standalone
 cluster:
   instances: 1
+  # With one instance the operator's default PDB (minAvailable: 1) can never be
+  # satisfied: it sits at 0 allowed disruptions permanently, so node drains hang
+  # and AKS cluster upgrades stall. Disabling it lets the pod be evicted and
+  # rescheduled -- a brief outage, but unavoidable for a single-instance cluster.
+  # https://cloudnative-pg.io/documentation/current/kubernetes_upgrade/#pod-disruption-budgets
+  enablePDB: false
   storage:
     size: 1Gi
   resources:
