@@ -33,8 +33,3 @@ primary:
     checkpoint_timeout = 10min          # Increased from 5min to reduce checkpoint frequency
     min_wal_size = 32MB                 # Reduced from 80MB (small database, less WAL overhead)
     max_wal_size = 128MB                # Reduced from 400MB (small database, smaller WAL footprint)
-# there are some commands that cause the db to freeze up temporarily and then the liveness probe kills the pod prematurely
-  livenessProbe:
-    periodSeconds: 600
-  readinessProbe:
-    periodSeconds: 600
