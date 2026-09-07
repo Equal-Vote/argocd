@@ -1,5 +1,5 @@
-# dyff between <(yq . <(helm show values argo/argo-cd --version v7.7.16)) <(yq eval '. * load("values.yaml")' <(helm show values argo/argo-cd --version v7.7.16))
-# vim -O <(helm show values argo/argo-cd --version v7.7.16) values.yaml
+# dyff between <(yq . <(helm show values argo/argo-cd --version v10.8.0)) <(yq eval '. * load("values.yaml")' <(helm show values argo/argo-cd --version v10.8.0))
+# vim -O <(helm show values argo/argo-cd --version v10.8.0) values.yaml
 
 # Based on:
 # https://github.com/jkroepke/helm-secrets/wiki/ArgoCD-Integration
@@ -11,6 +11,12 @@ global:
 configs:
   params:
     applicationsetcontroller.enable.progressive.syncs: true
+
+    # argo-cd chart 9.0.0 removed the chart's own default for this and deferred to
+    # the upstream default (""). The chart previously defaulted it to "sync", which
+    # is what the ApplicationSet in applications/applicationset.yaml relies on, so
+    # pin it explicitly rather than inheriting a default that may drift.
+    applicationsetcontroller.policy: "sync"
   cm:
     kustomize.buildOptions: "--enable-alpha-plugins --enable-exec"
 
