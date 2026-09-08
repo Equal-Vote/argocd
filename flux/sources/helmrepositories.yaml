@@ -11,11 +11,11 @@ spec:
   interval: 1h
   url: https://cloudnative-pg.github.io/charts
 ---
-# Private registry. Requires a `devopscoop-registry` docker-config Secret in
-# flux-system before this resolves -- see flux/README.md, "Prerequisites".
-# ArgoCD reaches this today through repo-server credentials configured out of
-# band, so nothing in git currently proves we can pull it; establishing that is
-# one of the things this migration step is meant to find out.
+# Anonymous pull works -- verified 2026-09-08 by fetching a token from
+# gitlab.com/jwt/auth with no credentials and pulling the manifests for both
+# 0.11.0 and 0.8.2. No imagePullSecret is required. The chart is a generic
+# in-house app wrapper (Deployment/Service/Ingress/ServiceAccount) shared by
+# fider, star-server, alaska-rcv and discord-bot -- nothing fider-specific.
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
@@ -25,5 +25,3 @@ spec:
   type: oci
   interval: 1h
   url: oci://registry.gitlab.com/devopscoop/charts
-  secretRef:
-    name: devopscoop-registry

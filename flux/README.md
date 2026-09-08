@@ -29,12 +29,12 @@ That makes it worth using to rehearse the *hard* path rather than to dodge it.
 
 | Blocker | Why fider hits it | Also needed for |
 | --- | --- | --- |
-| Private OCI chart | uses `devopscoop/charts/app` | `star-server`, `alaska-rcv`, `discord-bot` |
+| OCI chart from `devopscoop` | uses `devopscoop/charts/app` | `star-server`, `alaska-rcv`, `discord-bot` |
 | Helm adoption | real PVC + CNPG cluster to adopt in place | `postgresql`, `keycloak` |
 | SSA field handover | ArgoCD owns fields as `argocd-controller` | every app |
 
-If we cannot pull the `devopscoop` chart, we learn that here, cheaply, instead of
-on `star-server`.
+Note the `devopscoop` registry turned out to be **anonymously pullable** — see
+below — so that row is a shape to rehearse, not an obstacle.
 
 ## Prerequisites
 
@@ -42,12 +42,12 @@ on `star-server`.
    `flux bootstrap github --owner=Equal-Vote --repository=argocd --path=./flux/clusters/equalvote`.
    Adds four controllers in `flux-system`. Note the cluster is already firing
    `KubeMemoryOvercommit`, so budget for the extra requests.
-2. **`devopscoop-registry` Secret** in `flux-system`, a `kubernetes.io/dockerconfigjson`
-   with pull access to `registry.gitlab.com/devopscoop/charts`. ArgoCD reaches
-   this registry through repo-server credentials configured out of band, so
-   nothing in git proves we can pull it. **Confirm this before anything else** —
-   it is the one prerequisite that could block the whole migration.
-3. **Make removal non-destructive.** See below.
+2. **Make removal non-destructive.** See below.
+
+No registry credentials are needed. `registry.gitlab.com/devopscoop/charts/app`
+serves anonymous pulls: a token from `gitlab.com/jwt/auth` with no credentials
+lists all tags and fetches the manifests for both `0.11.0` (fider) and `0.8.2`
+(the other three apps). Verified 2026-09-08.
 
 ## ⚠️ Removing an app from the ApplicationSet currently destroys its data
 
@@ -128,8 +128,17 @@ followed by a fresh install from either system is also a legitimate recovery.
 
 ## Known gaps
 
-- The `devopscoop` chart is a third-party private dependency. Four apps use it.
-  A full migration either needs durable credentials or replacement manifests.
+- The `devopscoop` chart is public but third-party. It is a generic app wrapper
+  rendering four objects (Deployment, Service, Ingress, ServiceAccount) from a
+  values file, shared by fider, star-server, alaska-rcv and discord-bot. Nothing
+  about fider requires it.
+
+  The risk is continuity, not access: `be16440` records that this chart has
+  already been moved once, "migrated from the now-deprecated dedevsecops org".
+  Version drift is live too — fider pins `0.11.0` while the other three pin
+  `0.8.2`. Vendoring the 10KB tarball into this repo, or replacing it with a
+  kustomize base (more idiomatic under Flux anyway), would remove the dependency
+  cheaply. Out of scope here.
 - `flux/clusters/equalvote/flux-system/` is a placeholder; `flux bootstrap`
   writes the real controller manifests there.
 - Nothing here has been validated against a live cluster — no `flux` or
