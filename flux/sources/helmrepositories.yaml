@@ -1,0 +1,29 @@
+# Chart sources for the Flux-managed apps, mirrored from the chartURL fields in
+# applications/*/config.json so both systems pull identical charts during the
+# transition.
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: cloudnative-pg
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://cloudnative-pg.github.io/charts
+---
+# Private registry. Requires a `devopscoop-registry` docker-config Secret in
+# flux-system before this resolves -- see flux/README.md, "Prerequisites".
+# ArgoCD reaches this today through repo-server credentials configured out of
+# band, so nothing in git currently proves we can pull it; establishing that is
+# one of the things this migration step is meant to find out.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: devopscoop
+  namespace: flux-system
+spec:
+  type: oci
+  interval: 1h
+  url: oci://registry.gitlab.com/devopscoop/charts
+  secretRef:
+    name: devopscoop-registry
