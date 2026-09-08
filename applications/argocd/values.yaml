@@ -76,8 +76,15 @@ repoServer:
       value: "true"
     - name: HELM_SECRETS_VALUES_ALLOW_PATH_TRAVERSAL
       value: "false"
+    # Off. The wrapper mounted over /usr/local/sbin/helm rewrites `helm template`
+    # into `helm secrets template`, and under ArgoCD v3 the real helm no longer
+    # resolves the plugin -- every render fails with
+    # `unknown command "secrets" for "helm"`.
+    # https://github.com/jkroepke/helm-secrets/issues/566
+    # Nothing here needs it: no app declares a secrets:// value file, and our
+    # SOPS path is ksops through kustomize in the secrets app.
     - name: HELM_SECRETS_WRAPPER_ENABLED
-      value: "true"
+      value: "false"
     - name: HELM_SECRETS_DECRYPT_SECRETS_IN_TMP_DIR
       value: "true"
     - name: HELM_SECRETS_HELM_PATH
@@ -141,9 +148,6 @@ repoServer:
     - mountPath: /.config/kustomize/plugin/viaduct.ai/v1/ksops/ksops
       name: custom-tools
       subPath: ksops
-    - mountPath: /usr/local/sbin/helm
-      subPath: helm
-      name: custom-tools
     - mountPath: /custom-tools
       name: custom-tools
 
