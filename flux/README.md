@@ -29,12 +29,39 @@ That makes it worth using to rehearse the *hard* path rather than to dodge it.
 
 | Blocker | Why fider hits it | Also needed for |
 | --- | --- | --- |
-| OCI chart from `devopscoop` | uses `devopscoop/charts/app` | `star-server`, `alaska-rcv`, `discord-bot` |
 | Helm adoption | real PVC + CNPG cluster to adopt in place | `postgresql`, `keycloak` |
 | SSA field handover | ArgoCD owns fields as `argocd-controller` | every app |
 
-Note the `devopscoop` registry turned out to be **anonymously pullable** — see
-below — so that row is a shape to rehearse, not an obstacle.
+The third blocker, the `devopscoop` chart, is gone from this path entirely:
+`flux/base/app` reproduces it as plain manifests we own (see below).
+
+## flux/base/app
+
+The Flux path does not use `devopscoop/charts/app`. That chart renders four
+objects — ServiceAccount, Service, Deployment, Ingress — from a values file, and
+`flux/base/app` is those four objects as a kustomize base, with
+`flux/apps/fider` as the overlay.
+
+Verified with `kubectl kustomize flux/apps/fider` against the live cluster: the
+Deployment selector, container name, image, `serviceAccountName`, `env`,
+`resources` and `ports`, the Service selector and ports, and the entire Ingress
+spec all render **identical** to what is running.
+
+Two things worth knowing about the design:
+
+- The label `app.kubernetes.io/name: app` is kept deliberately. It is half of
+  the live Deployment's selector, and selectors are immutable — changing it
+  would force a delete/recreate. The overlay adds
+  `app.kubernetes.io/instance: fider` via `labels` with `includeSelectors: true`,
+  reproducing the live selector exactly.
+- Adoption will cause **one pod rollout**. The rendered pod template drops three
+  Helm bookkeeping labels (`helm.sh/chart`, `app.kubernetes.io/managed-by`,
+  `app.kubernetes.io/version`), which changes the pod-template hash. Harmless
+  here, and worth expecting rather than debugging.
+
+`fider-db` stays a HelmRelease on the upstream CloudNativePG `cluster` chart —
+that is a real upstream, not an in-house wrapper, and keeping it preserves the
+Helm-adoption rehearsal that `postgresql` and `keycloak` will need.
 
 ## Prerequisites
 
@@ -44,10 +71,8 @@ below — so that row is a shape to rehearse, not an obstacle.
    `KubeMemoryOvercommit`, so budget for the extra requests.
 2. **Make removal non-destructive.** See below.
 
-No registry credentials are needed. `registry.gitlab.com/devopscoop/charts/app`
-serves anonymous pulls: a token from `gitlab.com/jwt/auth` with no credentials
-lists all tags and fetches the manifests for both `0.11.0` (fider) and `0.8.2`
-(the other three apps). Verified 2026-09-08.
+No registry credentials are needed. The only chart pulled is CloudNativePG's,
+from a public repository.
 
 ## ⚠️ Removing an app from the ApplicationSet currently destroys its data
 
@@ -128,17 +153,13 @@ followed by a fresh install from either system is also a legitimate recovery.
 
 ## Known gaps
 
-- The `devopscoop` chart is public but third-party. It is a generic app wrapper
-  rendering four objects (Deployment, Service, Ingress, ServiceAccount) from a
-  values file, shared by fider, star-server, alaska-rcv and discord-bot. Nothing
-  about fider requires it.
-
-  The risk is continuity, not access: `be16440` records that this chart has
-  already been moved once, "migrated from the now-deprecated dedevsecops org".
-  Version drift is live too — fider pins `0.11.0` while the other three pin
-  `0.8.2`. Vendoring the 10KB tarball into this repo, or replacing it with a
-  kustomize base (more idiomatic under Flux anyway), would remove the dependency
-  cheaply. Out of scope here.
+- `star-server`, `alaska-rcv` and `discord-bot` still use `devopscoop/charts/app`
+  under ArgoCD. They are untouched here, but `flux/base/app` is written to be
+  reusable: a second overlay supplying its own name, image, env and ingress
+  should be all another app needs. The registry is public (anonymous pull
+  verified 2026-09-08), so this is a continuity question rather than an access
+  one — `be16440` notes the chart has already been relocated once, "migrated
+  from the now-deprecated dedevsecops org".
 - `flux/clusters/equalvote/flux-system/` is a placeholder; `flux bootstrap`
   writes the real controller manifests there.
 - Nothing here has been validated against a live cluster — no `flux` or
