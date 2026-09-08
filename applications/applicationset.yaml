@@ -33,6 +33,19 @@ spec:
       name: "{{application.name}}"
       labels:
         phase: "{{application.phase}}"
+      annotations:
+        # Diff against a server-side dry-run apply instead of the client-side
+        # three-way merge. Every app below syncs with ServerSideApply=true, which
+        # stops ArgoCD writing the last-applied-configuration annotation the
+        # three-way merge depends on -- so API-server defaults and mutating
+        # webhooks read as drift and the app never reaches Synced.
+        #
+        # This is a *compare* option, not a sync option: it is only read from
+        # this annotation or from controller.diff.server.side in
+        # argocd-cmd-params-cm. Putting ServerSideDiff in syncOptions below is
+        # silently ignored.
+        # https://argo-cd.readthedocs.io/en/stable/user-guide/diff-strategies/#server-side-diff
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
     spec:
       project: "{{argocd.project}}"
       sources:

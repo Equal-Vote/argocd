@@ -68,10 +68,17 @@ Setup scripts: `utils/workload-identity.sh`, README sections for external-dns an
 
 Defined per-app in `config.json` via the `prune` field. Managed by ApplicationSet template at `applications/applicationset.yaml:30`.
 
-- All apps **auto-sync** with `selfHeal: true`
+- The template sets `automated.selfHeal: true`, but `strategy: RollingSync` strips
+  `syncPolicy.automated` from the generated Applications and drives sync ordering
+  itself — the live apps show `automated: null`. Only the standalone
+  `bootstrap-cluster` / `bootstrap-secrets` apps keep their own automated policy.
 - `prune: false` on **all** apps (universal default to protect PVCs)
 - cert-manager bootstrap app: `selfHeal: false` (defined in `application.yaml:67`)
 - `syncOptions: [CreateNamespace=true, ServerSideApply=true]` on all apps
+- `argocd.argoproj.io/compare-options: ServerSideDiff=true` annotation on all apps.
+  ServerSideDiff is a **compare** option, not a sync option — it is read only from
+  this annotation or from `controller.diff.server.side` in `argocd-cmd-params-cm`,
+  and is silently ignored if placed in `syncOptions`.
 
 ## Important defaults
 
