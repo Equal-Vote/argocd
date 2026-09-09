@@ -69,12 +69,19 @@ az identity federated-credential create \
   --subject "system:serviceaccount:${SERVICE_ACCOUNT_NAMESPACE}:${SERVICE_ACCOUNT_NAME}"
 ```
 
-Create the clusterissuer:
+The ClusterIssuer is tracked at `secrets/clusterissuer.yaml` and applied by the
+`bootstrap-secrets` app, so there is nothing to apply by hand. It references the
+managed identity created above via `managedIdentity.clientID` — update that value
+in the manifest when standing up a new environment.
+
+`utils/clusterissuer.template.txt` records where the values come from:
 
 ```
-cat clusterissuer.template.txt | envsubst > clusterissuer.yaml
-k apply -f clusterissuer.yaml
+cat utils/clusterissuer.template.txt | envsubst > clusterissuer.yaml
 ```
+
+That render is gitignored. Copy the result into `secrets/clusterissuer.yaml` and
+push, rather than applying it directly.
 
 # Using Loki/Grafana
 
@@ -119,4 +126,3 @@ Grafana: This is the web end point for viewing those logs
 ```
 {pod=~"star-server-app-.*"} |~ "status:50.+" != "robots.txt"
 ```
-
