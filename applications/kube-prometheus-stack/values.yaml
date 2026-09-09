@@ -133,12 +133,19 @@ prometheus:
       hosts:
       - prometheus.prod.equal.vote
 grafana:
+  # 512Mi, not the 232Mi KRR recommended on 2026-05-04. That number was measured
+  # against Grafana 12.4.2 (chart 82.17.1), which peaked at 184Mi. Chart 90.0.0
+  # ships Grafana 13.2.1, whose unified-storage bleve search index and background
+  # plugin installer put the idle floor at ~213Mi, so every dashboard load crossed
+  # 232Mi and got the container OOMKilled -- which is what ingress-nginx turned
+  # into 502/503s. Do not lower this from a KRR run taken while the old limit was
+  # clamping the peak; re-measure with headroom first.
   resources:
     requests:
       cpu: 10m
-      memory: 232Mi
+      memory: 512Mi
     limits:
-      memory: 232Mi
+      memory: 512Mi
   sidecar:
     resources:
       requests:
