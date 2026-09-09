@@ -73,14 +73,17 @@ Setup scripts: `utils/workload-identity.sh`, README sections for external-dns an
 
 ## Sync policy
 
-Defined per-app in `config.json` via the `prune` field. Managed by ApplicationSet template at `applications/applicationset.yaml:30`.
+Defined once in the ApplicationSet template at `applications/applicationset.yaml`; there is no per-app override. (A per-app `prune` field would need `goTemplate: true` — the template uses string substitution, which cannot produce a YAML boolean.)
 
 - `automated.selfHeal: true` is live on every generated app. It used to be inert:
   `strategy: RollingSync` set `automated.enabled: false` and drove syncs itself.
 - `retry` (5 attempts, 15s doubling to 5m) covers the cnpg-operator → fider-db CRD
   dependency the phases used to enforce.
-- `prune: false` on **all** apps (universal default to protect PVCs)
-- `syncOptions: [CreateNamespace=true, ServerSideApply=true]` on all apps
+- `prune: true` on all generated apps, with `PruneLast=true` so deletions happen
+  after the rest of the sync succeeds. Prune reaches **no** PVC: every
+  PersistentVolumeClaim here is made by a controller (StatefulSet
+  volumeClaimTemplate, CNPG operator, prometheus-operator), not by Helm.
+- `syncOptions: [CreateNamespace=true, ServerSideApply=true, PruneLast=true]` on all apps
 - `argocd.argoproj.io/compare-options: ServerSideDiff=true` annotation on all apps.
   ServerSideDiff is a **compare** option, not a sync option — it is read only from
   this annotation or from `controller.diff.server.side` in `argocd-cmd-params-cm`,

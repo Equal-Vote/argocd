@@ -54,6 +54,18 @@ spec:
           # generated Application and drove syncs itself, which left selfHeal
           # declared but inert.
           selfHeal: true
+
+          # Without this, ArgoCD reconciles drift in one direction only: it reverts
+          # a resource someone modifies, but leaves a resource deleted from git
+          # running forever. That also makes revocation impossible -- when a chart
+          # tightens its RBAC between versions the old permissive binding stays in
+          # force while the app still reports Synced.
+          #
+          # Nothing here is a PVC. Every PersistentVolumeClaim in this cluster is
+          # created by a controller (StatefulSet volumeClaimTemplate, the CNPG
+          # operator, prometheus-operator), not by Helm, so ArgoCD manages none of
+          # them and prune cannot reach them.
+          prune: true
         retry:
           # Covers the one ordering dependency the phases used to enforce:
           # fider-db creates a postgresql.cnpg.io Cluster, whose CRD comes from
@@ -70,6 +82,12 @@ spec:
           # This is fix this error: https://foxutech.medium.com/how-to-fix-too-long-must-have-at-most-262144-bytes-in-argocd-2a00cddbbe99
           - ServerSideApply=true
 
+          # Delete removed resources only after everything else has synced. This
+          # matters for the devopscoop app chart 0.11.0 rename, which drops the
+          # "-app" suffix from every resource: the old Deployment and Ingress are
+          # removed only once their replacements are up.
+          - PruneLast=true
+
       ignoreDifferences:
         # Two controllers besides ArgoCD write to cert-manager's validating
         # webhook, and neither field is in the chart:
@@ -83,10 +101,10 @@ spec:
         # an atomic list, so a server-side diff would reset it to the chart's
         # single entry -- which is why ServerSideDiff alone does not settle this.
         #
-        # Left alone, cert-manager can never reach Synced. That was cosmetic while
-        # it was a standalone bootstrap app, but it now sits in step 1 of the
-        # RollingSync, where an OutOfSync app holds the step at Waiting and stalls
-        # every later step.
+        # Left alone, cert-manager can never reach Synced. This originally mattered
+        # because RollingSync held its whole step at Waiting; that strategy is gone,
+        # but the rule stays -- an app that is permanently OutOfSync is one you stop
+        # reading, and it would mask real drift.
         #
         # managedFieldsManagers ignores whatever those two managers own rather than
         # naming field paths, so it adapts if they change which fields they touch,
