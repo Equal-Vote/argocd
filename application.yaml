@@ -39,38 +39,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
----
-apiVersion: "argoproj.io/v1alpha1"
-kind: "Application"
-metadata:
-  name: "cert-manager"
-  namespace: "argocd"
-  finalizers:
-    - "resources-finalizer.argocd.argoproj.io"
-spec:
-  project: "default"
-  sources:
-    - repoURL: "https://charts.jetstack.io"
-      targetRevision: "1.21.1"
-      chart: "cert-manager"
-      helm:
-        valueFiles:
-          - "$values/applications/cert-manager/values.yaml"
-    - repoURL: "https://github.com/Equal-Vote/argocd.git"
-      ref: "values"
-      targetRevision: "HEAD"
-  destination:
-    name: "in-cluster"
-    namespace: "cert-manager"
-  syncPolicy:
-    automated:
-      selfHeal: false
-      prune: true
-    syncOptions:
-      - CreateNamespace=true
-
-      # Required now that this app carries the CRDs. Three of them --
-      # challenges, issuers and clusterissuers -- are individually larger than
-      # the 262144-byte limit on the last-applied-configuration annotation that
-      # a client-side apply writes. Server-side apply skips that annotation.
-      - ServerSideApply=true
