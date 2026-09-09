@@ -9,29 +9,15 @@ spec:
         revision: "HEAD"
         files:
           - path: "applications/**/config.json"
-  strategy:
-    type: "RollingSync"
-    rollingSync:
-      steps:
-        - matchExpressions:
-            - key: "phase"
-              operator: "In"
-              values:
-                - "initial"
-        - matchExpressions:
-            - key: "phase"
-              operator: "In"
-              values:
-                - "core"
-        - matchExpressions:
-            - key: "phase"
-              operator: "In"
-              values:
-                - "post"
   template:
     metadata:
       name: "{{application.name}}"
       labels:
+        # Retained for grouping and for the ArgoCD UI. This no longer drives sync
+        # ordering: the RollingSync strategy that consumed it was removed, because
+        # the only real cross-app dependency in this cluster is cnpg-operator's
+        # CRDs before fider-db's Cluster resource, and the retry policy below
+        # covers that on its own.
         phase: "{{application.phase}}"
       annotations:
         # Diff against a server-side dry-run apply instead of the client-side
@@ -63,7 +49,21 @@ spec:
         namespace: "{{cluster.namespace}}"
       syncPolicy:
         automated:
+          # With RollingSync removed this is live for the first time. Previously
+          # the ApplicationSet controller set `automated.enabled: false` on every
+          # generated Application and drove syncs itself, which left selfHeal
+          # declared but inert.
           selfHeal: true
+        retry:
+          # Covers the one ordering dependency the phases used to enforce:
+          # fider-db creates a postgresql.cnpg.io Cluster, whose CRD comes from
+          # cnpg-operator. If fider-db syncs first it fails with "no matches for
+          # kind Cluster" and succeeds on a later attempt.
+          limit: 5
+          backoff:
+            duration: "15s"
+            factor: 2
+            maxDuration: "5m"
         syncOptions:
           - CreateNamespace=true
 

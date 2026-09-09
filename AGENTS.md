@@ -17,13 +17,20 @@ kubectl apply -f application.yaml
 
 `application.yaml` creates two bootstrap Apps: `bootstrap-secrets` (kustomize+SOPS) and `bootstrap-cluster` (ApplicationSet). Everything else, cert-manager included, comes from the ApplicationSet.
 
-## Deploy phases (ordered)
+## Phases (labels, not ordering)
 
-Defined in `applications/applicationset.yaml`. Apps are rolled in three phases:
+Every app carries a `phase` label from its `config.json`:
 
-1. `initial` — cert-manager, ingress-nginx, external-dns
-1. `core` — argocd, loki, fluent-bit, kube-prometheus-stack
-1. `post` — keycloak, postgresql, star-server, alaska-rcv, discord-bot
+- `initial` — cert-manager, ingress-nginx, external-dns
+- `core` — argocd, loki, fluent-bit, kube-prometheus-stack
+- `post` — keycloak, postgresql, star-server, alaska-rcv, discord-bot
+
+These are for grouping and the ArgoCD UI. They **do not** order syncs. The
+RollingSync strategy that consumed them was removed: the only cross-app
+dependency in this cluster is cnpg-operator's CRDs before fider-db's
+`postgresql.cnpg.io` Cluster, and the template's `retry` policy covers that.
+Nothing else needs sync-time ordering — Ingresses, Certificates and database
+connections all resolve at runtime.
 
 Add a new app by creating `applications/<name>/config.json` + `values.yaml`. The ApplicationSet Git file generator picks it up automatically.
 
@@ -68,11 +75,10 @@ Setup scripts: `utils/workload-identity.sh`, README sections for external-dns an
 
 Defined per-app in `config.json` via the `prune` field. Managed by ApplicationSet template at `applications/applicationset.yaml:30`.
 
-- The template sets `automated.selfHeal: true`, but `strategy: RollingSync` disables
-  auto-sync on the generated Applications and drives sync ordering itself — the live
-  apps show `automated: {enabled: false, selfHeal: true}`, so `selfHeal` is inert.
-  Only the standalone `bootstrap-cluster` / `bootstrap-secrets` apps keep their own
-  automated policy.
+- `automated.selfHeal: true` is live on every generated app. It used to be inert:
+  `strategy: RollingSync` set `automated.enabled: false` and drove syncs itself.
+- `retry` (5 attempts, 15s doubling to 5m) covers the cnpg-operator → fider-db CRD
+  dependency the phases used to enforce.
 - `prune: false` on **all** apps (universal default to protect PVCs)
 - `syncOptions: [CreateNamespace=true, ServerSideApply=true]` on all apps
 - `argocd.argoproj.io/compare-options: ServerSideDiff=true` annotation on all apps.
