@@ -15,13 +15,13 @@ helm install argocd argo/argo-cd --namespace argocd --version 6.7.12
 kubectl apply -f application.yaml
 ```
 
-`application.yaml` creates three bootstrap Apps: `bootstrap-secrets` (kustomize+SOPS), `bootstrap-cluster` (ApplicationSet), and `cert-manager` (Helm, separate because it must run first).
+`application.yaml` creates two bootstrap Apps: `bootstrap-secrets` (kustomize+SOPS) and `bootstrap-cluster` (ApplicationSet). Everything else, cert-manager included, comes from the ApplicationSet.
 
 ## Deploy phases (ordered)
 
 Defined in `applications/applicationset.yaml`. Apps are rolled in three phases:
 
-1. `initial` — ingress-nginx, external-dns
+1. `initial` — cert-manager, ingress-nginx, external-dns
 1. `core` — argocd, loki, fluent-bit, kube-prometheus-stack
 1. `post` — keycloak, postgresql, star-server, alaska-rcv, discord-bot
 
@@ -68,12 +68,12 @@ Setup scripts: `utils/workload-identity.sh`, README sections for external-dns an
 
 Defined per-app in `config.json` via the `prune` field. Managed by ApplicationSet template at `applications/applicationset.yaml:30`.
 
-- The template sets `automated.selfHeal: true`, but `strategy: RollingSync` strips
-  `syncPolicy.automated` from the generated Applications and drives sync ordering
-  itself — the live apps show `automated: null`. Only the standalone
-  `bootstrap-cluster` / `bootstrap-secrets` apps keep their own automated policy.
+- The template sets `automated.selfHeal: true`, but `strategy: RollingSync` disables
+  auto-sync on the generated Applications and drives sync ordering itself — the live
+  apps show `automated: {enabled: false, selfHeal: true}`, so `selfHeal` is inert.
+  Only the standalone `bootstrap-cluster` / `bootstrap-secrets` apps keep their own
+  automated policy.
 - `prune: false` on **all** apps (universal default to protect PVCs)
-- cert-manager bootstrap app: `selfHeal: false` (defined in `application.yaml:67`)
 - `syncOptions: [CreateNamespace=true, ServerSideApply=true]` on all apps
 - `argocd.argoproj.io/compare-options: ServerSideDiff=true` annotation on all apps.
   ServerSideDiff is a **compare** option, not a sync option — it is read only from
@@ -83,5 +83,8 @@ Defined per-app in `config.json` via the `prune` field. Managed by ApplicationSe
 ## Important defaults
 
 - All apps target `in-cluster` (same AKS cluster)
+- cert-manager must stay in `initial`: nothing in that phase requests a Certificate,
+  and its CRDs have to exist before the `core` / `post` apps whose Ingresses trigger
+  ingress-shim. It also carries its own CRDs (`crds.enabled: true`).
 - `applications-disabled/matomo` is the only disabled app
 - `local/` and `clusterissuer.yaml` are gitignored
