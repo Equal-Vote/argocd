@@ -68,3 +68,9 @@ spec:
       prune: true
     syncOptions:
       - CreateNamespace=true
+
+      # Required now that this app carries the CRDs. Three of them --
+      # challenges, issuers and clusterissuers -- are individually larger than
+      # the 262144-byte limit on the last-applied-configuration annotation that
+      # a client-side apply writes. Server-side apply skips that annotation.
+      - ServerSideApply=true

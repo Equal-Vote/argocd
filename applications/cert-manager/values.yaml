@@ -1,9 +1,20 @@
 # dyff between <(yq . <(helm show values oci://quay.io/jetstack/charts/cert-manager --version v1.21.1)) <(yq eval '. * load("values.yaml")' <(helm show values oci://quay.io/jetstack/charts/cert-manager --version v1.21.1))
 # vim -O <(helm show values oci://quay.io/jetstack/charts/cert-manager --version v1.21.1) values.yaml
 
-# CRDs have already been installed in this cluster, so we don't need to do this again.
-# crds:
-#   enabled: true
+# Let ArgoCD own the CRDs. They were originally applied out of band, which meant
+# every upgrade needed a separate `kubectl apply` of the CRD manifest -- and when
+# that was missed the CRDs silently drifted behind the controller. Upgrading to
+# 1.21.1 was the first time it bit: the new controller writes
+# Challenge.status.presentedAt, which v1.20.1 CRDs would have pruned on write.
+#
+# keep: true retains the helm.sh/resource-policy annotation, which stops *Helm*
+# removing them. ArgoCD does not honour that annotation, and this app syncs with
+# prune: true -- so setting enabled back to false would delete the CRDs, and the
+# garbage collector would take every Certificate, Issuer and ClusterIssuer in
+# the cluster with them.
+crds:
+  enabled: true
+  keep: true
 
 # ArgoCD keeps recreating the startupapicheck job, which appears to be passing. It's stuck in a loop. So, we're just going to disable it here.
 startupapicheck:
