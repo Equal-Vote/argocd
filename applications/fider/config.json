@@ -8,7 +8,7 @@
     "chartURL": "registry.gitlab.com/devopscoop/charts",
     "name": "fider",
     "phase": "post",
-    "revision": "0.11.0",
+    "revision": "0.11.1",
     "valuesRevision": "HEAD",
     "valuesURL": "https://github.com/Equal-Vote/argocd.git"
   },
