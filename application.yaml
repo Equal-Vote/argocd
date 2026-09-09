@@ -51,7 +51,7 @@ spec:
   project: "default"
   sources:
     - repoURL: "https://charts.jetstack.io"
-      targetRevision: "1.20.1"
+      targetRevision: "1.21.1"
       chart: "cert-manager"
       helm:
         valueFiles:
