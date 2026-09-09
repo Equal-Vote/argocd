@@ -8,7 +8,7 @@
     "chartURL": "https://cloudnative-pg.github.io/charts",
     "name": "cnpg-operator",
     "phase": "core",
-    "revision": "0.28.3",
+    "revision": "0.29.0",
     "valuesRevision": "HEAD",
     "valuesURL": "https://github.com/Equal-Vote/argocd.git"
   },
