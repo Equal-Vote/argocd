@@ -69,3 +69,33 @@ spec:
 
           # This is fix this error: https://foxutech.medium.com/how-to-fix-too-long-must-have-at-most-262144-bytes-in-argocd-2a00cddbbe99
           - ServerSideApply=true
+
+      ignoreDifferences:
+        # Two controllers besides ArgoCD write to cert-manager's validating
+        # webhook, and neither field is in the chart:
+        #
+        #   cert-manager-cainjector (Apply)  -> webhooks[].clientConfig.caBundle
+        #   admissionsenforcer (Update)      -> webhooks[].namespaceSelector
+        #
+        # admissionsenforcer is the AKS admission enforcer. The chart renders
+        # namespaceSelector with one matchExpression and AKS appends two more,
+        # excluding control-plane and AKS-managed namespaces. matchExpressions is
+        # an atomic list, so a server-side diff would reset it to the chart's
+        # single entry -- which is why ServerSideDiff alone does not settle this.
+        #
+        # Left alone, cert-manager can never reach Synced. That was cosmetic while
+        # it was a standalone bootstrap app, but it now sits in step 1 of the
+        # RollingSync, where an OutOfSync app holds the step at Waiting and stalls
+        # every later step.
+        #
+        # managedFieldsManagers ignores whatever those two managers own rather than
+        # naming field paths, so it adapts if they change which fields they touch,
+        # and still reports drift introduced by anyone else -- including a human
+        # with kubectl. The name selector keeps this scoped to cert-manager's
+        # webhook; no other app in this ApplicationSet owns that resource.
+        - group: "admissionregistration.k8s.io"
+          kind: "ValidatingWebhookConfiguration"
+          name: "cert-manager-webhook"
+          managedFieldsManagers:
+            - "cert-manager-cainjector"
+            - "admissionsenforcer"
