@@ -1,7 +1,30 @@
-# dyff between <(yq . <(helm show values fluent/fluent-bit --version v0.57.2)) <(yq eval '. * load("values.yaml")' <(helm show values fluent/fluent-bit --version v0.57.2))
-# vim -O <(helm show values fluent/fluent-bit --version v0.57.2) values.yaml
+# dyff between <(yq . <(helm show values fluent/fluent-bit --version v0.58.1)) <(yq eval '. * load("values.yaml")' <(helm show values fluent/fluent-bit --version v0.58.1))
+# vim -O <(helm show values fluent/fluent-bit --version v0.58.1) values.yaml
 
 config:
+  # The chart default for this filter sets no Buffer_Size, so it falls back to
+  # fluent-bit's 32KB cap on a single Kubernetes API response. argocd-repo-server's
+  # pod object is 36405 bytes -- three KSOPS/helm-secrets initContainers with long
+  # inline scripts, plus managedFields from four appliers -- so the lookup fails
+  # with "cannot increase buffer: current=32000 requested=64768 max=32000" and its
+  # log lines reach Loki with no Kubernetes labels at all. They are then invisible
+  # to every label query in Grafana, while every other pod is fine.
+  #
+  # Only one of the two DaemonSet pods complains, because only one shares a node
+  # with argocd-repo-server.
+  #
+  # Everything above Buffer_Size is the chart default, repeated verbatim so this
+  # override does not silently drop settings.
+  filters: |
+    [FILTER]
+        Name kubernetes
+        Match kube.*
+        Merge_Log On
+        Keep_Log Off
+        K8S-Logging.Parser On
+        K8S-Logging.Exclude On
+        Buffer_Size 1M
+
   outputs: |
     [OUTPUT]
         Name                 loki

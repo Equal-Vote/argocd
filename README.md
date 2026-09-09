@@ -117,6 +117,5 @@ Grafana: This is the web end point for viewing those logs
 **500 Errors w/o robots.txt**
 
 ```
-{pod=~"star-server-app-.*"} |~ "status:50.+" != "robots.txt"
+{app_kubernetes_io_instance="star-server"} |~ "status:50.+" != "robots.txt"
 ```
-
