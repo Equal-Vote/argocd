@@ -11,7 +11,7 @@
         "chartName": "ingress-nginx",
         "chartURL": "https://kubernetes.github.io/ingress-nginx",
         "phase": "initial",
-        "revision": "4.10.0",
+        "revision": "4.15.1",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
         "valuesRevision": "HEAD"
     }
