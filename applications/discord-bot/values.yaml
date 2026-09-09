@@ -1,5 +1,5 @@
-# dyff between <(yq . <(helm show values oci://registry.gitlab.com/devopscoop/charts/app --version 0.8.2)) <(yq eval '. * load("values.yaml")' <(helm show values oci://registry.gitlab.com/devopscoop/charts/app --version 0.8.2))
-# vim -O <(helm show values oci://registry.gitlab.com/devopscoop/charts/app --version 0.8.2) values.yaml
+# dyff between <(yq . <(helm show values oci://registry.gitlab.com/devopscoop/charts/app --version 0.11.1)) <(yq eval '. * load("values.yaml")' <(helm show values oci://registry.gitlab.com/devopscoop/charts/app --version 0.11.1))
+# vim -O <(helm show values oci://registry.gitlab.com/devopscoop/charts/app --version 0.11.1) values.yaml
 
 replicaCount: 0
 image:
