@@ -11,7 +11,7 @@
         "chartName": "fluent-bit",
         "chartURL": "https://fluent.github.io/helm-charts",
         "phase": "core",
-        "revision": "0.57.2",
+        "revision": "0.58.1",
         "valuesURL": "https://github.com/Equal-Vote/argocd.git",
         "valuesRevision": "HEAD"
     }
