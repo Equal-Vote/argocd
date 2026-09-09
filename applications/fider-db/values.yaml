@@ -1,5 +1,5 @@
-# dyff between <(yq . <(helm show values cnpg/cluster --version 0.7.0)) <(yq eval '. * load("values.yaml")' <(helm show values cnpg/cluster --version 0.7.0))
-# vim -O <(helm show values cnpg/cluster --version 0.7.0) values.yaml
+# dyff between <(yq . <(helm show values cnpg/cluster --version 0.8.1)) <(yq eval '. * load("values.yaml")' <(helm show values cnpg/cluster --version 0.8.1))
+# vim -O <(helm show values cnpg/cluster --version 0.8.1) values.yaml
 
 fullnameOverride: fider-db
 type: postgresql
