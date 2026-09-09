@@ -1,5 +1,5 @@
-# dyff between <(yq . <(helm show values prometheus-community/kube-prometheus-stack --version v82.17.1)) <(yq eval '. * load("values.yaml")' <(helm show values prometheus-community/kube-prometheus-stack --version v82.17.1))
-# vim -O <(helm show values prometheus-community/kube-prometheus-stack --version v82.17.1) values.yaml
+# dyff between <(yq . <(helm show values prometheus-community/kube-prometheus-stack --version v90.0.0)) <(yq eval '. * load("values.yaml")' <(helm show values prometheus-community/kube-prometheus-stack --version v90.0.0))
+# vim -O <(helm show values prometheus-community/kube-prometheus-stack --version v90.0.0) values.yaml
 
 # We can't monitor the Azure AKS control plane services
 kubeControllerManager:
