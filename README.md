@@ -99,19 +99,19 @@ Grafana: This is the web end point for viewing those logs
 **Show all logs for the star-server backend**
 
 ```
-{pod=~"star-server-app-.*"}
+{app_kubernetes_io_instance="star-server"}
 ```
 
 **Find all 500 Errors**
 
 ```
-{pod=~"star-server-app-.*"} |~ "status:50.+"
+{app_kubernetes_io_instance="star-server"} |~ "status:50.+"
 ```
 
 **Trace a specific API request**
 
 ```
-{pod=~"star-server-app-.*"} |~ "ctx:c09a38fc"
+{app_kubernetes_io_instance="star-server"} |~ "ctx:c09a38fc"
 ```
 
 **500 Errors w/o robots.txt**
