@@ -59,7 +59,7 @@ Two things worth knowing about the design:
   `app.kubernetes.io/version`), which changes the pod-template hash. Harmless
   here, and worth expecting rather than debugging.
 
-`fider-db` stays a HelmRelease on the upstream CloudNativePG `cluster` chart —
+`fider-db` stays a HelmRelease on the upstream CloudNativePG `cluster` chart (pinned to `0.8.1`, matching `applications/fider-db/config.json`) —
 that is a real upstream, not an in-house wrapper, and keeping it preserves the
 Helm-adoption rehearsal that `postgresql` and `keycloak` will need.
 
