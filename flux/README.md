@@ -103,9 +103,26 @@ Verify the *bound* PV is the protected one, not an old `Released` entry.
 
 Ordering is the whole game: **detach from ArgoCD, then let Flux adopt.** Never
 both live — two controllers server-side-applying the same objects will fight
-over field ownership indefinitely.
+over field ownership indefinitely. That is why `flux/clusters/equalvote/apps.yaml`
+ships with `suspend: true`: bootstrapping Flux is safe on its own, and resuming
+is the deliberate cutover.
 
-1. Confirm prerequisites, especially the registry pull.
+The whole chain, in order — three PRs and four commands:
+
+| Step | Change | Kind |
+| --- | --- | --- |
+| 1 | `preserveResourcesOnDeletion: true` on the ApplicationSet | PR |
+| 2 | this scaffold | PR |
+| 3 | `flux bootstrap` | command |
+| 4 | Helm-adoption stamping (step 3 below) | commands |
+| 5 | remove `applications/fider{,-db}/config.json` | PR |
+| 6 | `flux resume kustomization apps` | command |
+
+1 must precede 5, or removing the config.json destroys the database. 2 must
+precede 3, because bootstrap reconciles from a branch in this repo. 5 must
+precede 6, so the two controllers never overlap.
+
+1. Confirm prerequisites.
 2. Apply the deletion-safety fix above.
 3. Stamp the existing resources so Helm adopts rather than reinstalls. ArgoCD
    renders charts and applies the manifests, so **no Helm release exists in the
@@ -124,8 +141,9 @@ over field ownership indefinitely.
 6. Watch for SSA conflicts against the leftover `argocd-controller` field
    manager. Once ArgoCD is no longer reconciling these objects the stale
    `managedFields` entries are harmless, but the first apply may need forcing.
-7. Only after one clean reconcile, flip `driftDetection.mode` from `warn` to
-   `enabled` in both HelmReleases.
+7. `flux resume kustomization apps`.
+8. Only after one clean reconcile, flip `driftDetection.mode` from `warn` to
+   `enabled` in the HelmRelease.
 
 ## Rollback
 
