@@ -1,3 +1,8 @@
+# NOTE: the live manifest is tracked at secrets/clusterissuer.yaml and applied
+# by the bootstrap-secrets app. This template is kept only to record where the
+# substituted values come from. Rendering it does not deploy anything -- copy
+# the result into secrets/clusterissuer.yaml and push.
+
 # cert-managers documentation is getting worse. The letsencrypt-prod ClusterIssuer example is buried here:
 # https://cert-manager.io/docs/tutorials/acme/pomerium-ingress/#configure-lets-encrypt-issuer
 
