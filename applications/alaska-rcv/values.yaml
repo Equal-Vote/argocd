@@ -4,7 +4,7 @@
 replicaCount: 1
 image:
   repository: ghcr.io/equal-vote/alaska-rcv
-  tag: "sha-78af116"
+  tag: "sha-6e0997b"
 ingress:
   enabled: true
   annotations:
