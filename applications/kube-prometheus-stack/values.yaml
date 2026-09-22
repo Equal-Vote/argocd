@@ -230,6 +230,14 @@ grafana:
         editable: true
         options:
           path: /var/lib/grafana/dashboards/ingress-nginx
+      - name: postgresql
+        orgId: 1
+        folder: "PostgreSQL"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/postgresql
   dashboards:
     ingress-nginx:
       ingress-nginx:
@@ -2210,4 +2218,1574 @@ grafana:
             "uid": "ingress-nginx",
             "version": 1,
             "weekStart": ""
+          }
+    postgresql:
+      postgresql-bitnami:
+        # --- Bitnami PostgreSQL dashboard ------------------------------------
+        # Same reasoning as the ingress-nginx dashboard above: grafana.dashboards
+        # is copied into a ConfigMap verbatim, with no tpl pass, so it is the one
+        # injection point that tolerates arbitrary dashboard JSON. Both of the
+        # alternatives run Go templating over the payload -- the postgresql chart's
+        # extraDeploy does it whenever the value contains a brace pair, and
+        # kube-prometheus-stack's extraManifests does it unconditionally.
+        #
+        # This dashboard is written with no {} brace pairs at all so it stays safe
+        # either way: series are named with Grafana's ${__field.labels.X} displayName
+        # syntax and byFrameRefID overrides rather than legendFormat. Keep it that
+        # way if you edit it.
+        #
+        # Scoped by namespace/job template variables rather than hardcoded to one
+        # release, so a second Bitnami PostgreSQL shows up here with no changes.
+        # fider-db is CloudNativePG, not Bitnami, and exports different metrics --
+        # it is not covered by this dashboard.
+        #
+        # Metric names were taken from postgres_exporter v0.15.0, which is what
+        # chart 15.2.9 pins. Two traps live in that set: pg_stat_bgwriter_* carries
+        # a _total suffix while pg_stat_database_* does not, and the pg_postmaster
+        # collector is registered defaultDisabled, so there is deliberately no
+        # uptime panel here.
+        #
+        # Requires metrics.enabled and metrics.serviceMonitor in
+        # applications/postgresql/values.yaml -- without those the panels render
+        # but stay empty.
+        json: |
+          {
+           "uid": "bitnami-postgresql",
+           "title": "PostgreSQL (Bitnami)",
+           "description": "Health, throughput and tuning signals for Bitnami PostgreSQL instances scraped by postgres_exporter. Panel descriptions name the postgresql.conf setting each signal maps to.",
+           "tags": [
+            "postgresql",
+            "bitnami",
+            "database"
+           ],
+           "timezone": "browser",
+           "schemaVersion": 39,
+           "version": 1,
+           "editable": true,
+           "graphTooltip": 1,
+           "refresh": "30s",
+           "time": {
+            "from": "now-6h",
+            "to": "now"
+           },
+           "templating": {
+            "list": [
+             {
+              "name": "datasource",
+              "label": "Data source",
+              "type": "datasource",
+              "query": "prometheus",
+              "current": {
+               "text": "Prometheus",
+               "value": "prometheus"
+              }
+             },
+             {
+              "name": "namespace",
+              "label": "Namespace",
+              "type": "query",
+              "datasource": {
+               "type": "prometheus",
+               "uid": "${datasource}"
+              },
+              "query": {
+               "qryType": 1,
+               "query": "label_values(pg_up, namespace)",
+               "refId": "var-namespace"
+              },
+              "definition": "label_values(pg_up, namespace)",
+              "refresh": 2,
+              "multi": true,
+              "includeAll": true,
+              "allValue": ".*"
+             },
+             {
+              "name": "job",
+              "label": "Instance",
+              "type": "query",
+              "datasource": {
+               "type": "prometheus",
+               "uid": "${datasource}"
+              },
+              "query": {
+               "qryType": 1,
+               "query": "label_values(pg_up{namespace=~\"$namespace\"}, job)",
+               "refId": "var-job"
+              },
+              "definition": "label_values(pg_up{namespace=~\"$namespace\"}, job)",
+              "refresh": 2,
+              "multi": true,
+              "includeAll": true,
+              "allValue": ".*"
+             },
+             {
+              "name": "datname",
+              "label": "Database",
+              "type": "query",
+              "datasource": {
+               "type": "prometheus",
+               "uid": "${datasource}"
+              },
+              "query": {
+               "qryType": 1,
+               "query": "label_values(pg_stat_database_numbackends{namespace=~\"$namespace\", job=~\"$job\", datname!~\"template.*|postgres\"}, datname)",
+               "refId": "var-datname"
+              },
+              "definition": "label_values(pg_stat_database_numbackends{namespace=~\"$namespace\", job=~\"$job\", datname!~\"template.*|postgres\"}, datname)",
+              "refresh": 2,
+              "multi": true,
+              "includeAll": true,
+              "allValue": ".*"
+             }
+            ]
+           },
+           "panels": [
+            {
+             "id": 1,
+             "type": "row",
+             "title": "Health",
+             "gridPos": {
+              "x": 0,
+              "y": 0,
+              "w": 24,
+              "h": 1
+             }
+            },
+            {
+             "id": 2,
+             "type": "stat",
+             "title": "Exporter / server up",
+             "description": "pg_up from postgres_exporter. 0 means the exporter cannot reach PostgreSQL.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 0,
+              "y": 1,
+              "w": 4,
+              "h": 4
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "min(pg_up{namespace=~\"$namespace\", job=~\"$job\"})",
+               "refId": "A"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "thresholds"
+               },
+               "unit": "short",
+               "mappings": [
+                {
+                 "type": "value",
+                 "options": {
+                  "0": {
+                   "text": "DOWN",
+                   "color": "red",
+                   "index": 0
+                  },
+                  "1": {
+                   "text": "UP",
+                   "color": "green",
+                   "index": 1
+                  }
+                 }
+                }
+               ],
+               "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                 {
+                  "color": "red",
+                  "value": null
+                 },
+                 {
+                  "color": "green",
+                  "value": 1
+                 }
+                ]
+               }
+              }
+             },
+             "options": {
+              "reduceOptions": {
+               "calcs": [
+                "lastNotNull"
+               ]
+              },
+              "graphMode": "none",
+              "colorMode": "value"
+             }
+            },
+            {
+             "id": 3,
+             "type": "gauge",
+             "title": "Connection saturation",
+             "description": "Backends as a percentage of max_connections. Connection exhaustion surfaces here well before memory does; PostgreSQL refuses new connections at 100%.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 4,
+              "y": 1,
+              "w": 5,
+              "h": 4
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "100 * sum by (job) (pg_stat_database_numbackends{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"})\n  / on (job) group_left max by (job) (pg_settings_max_connections{namespace=~\"$namespace\", job=~\"$job\"})",
+               "refId": "A"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "thresholds"
+               },
+               "unit": "percent",
+               "min": 0,
+               "max": 100,
+               "decimals": 1,
+               "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                 {
+                  "color": "green",
+                  "value": null
+                 },
+                 {
+                  "color": "yellow",
+                  "value": 70
+                 },
+                 {
+                  "color": "red",
+                  "value": 85
+                 }
+                ]
+               }
+              }
+             },
+             "options": {
+              "reduceOptions": {
+               "calcs": [
+                "lastNotNull"
+               ]
+              },
+              "showThresholdLabels": false,
+              "showThresholdMarkers": true
+             }
+            },
+            {
+             "id": 4,
+             "type": "stat",
+             "title": "Backends",
+             "description": "Current backends against the configured max_connections ceiling.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 9,
+              "y": 1,
+              "w": 5,
+              "h": 4
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(pg_stat_database_numbackends{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"})",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "max(pg_settings_max_connections{namespace=~\"$namespace\", job=~\"$job\"})",
+               "refId": "B"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "thresholds"
+               },
+               "unit": "short",
+               "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                 {
+                  "color": "text",
+                  "value": null
+                 }
+                ]
+               }
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "A"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "in use"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "max_connections"
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "reduceOptions": {
+               "calcs": [
+                "lastNotNull"
+               ]
+              },
+              "graphMode": "area",
+              "colorMode": "value"
+             }
+            },
+            {
+             "id": 5,
+             "type": "stat",
+             "title": "Database size",
+             "description": "On-disk size of the selected databases.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 14,
+              "y": 1,
+              "w": 5,
+              "h": 4
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(pg_database_size_bytes{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"})",
+               "refId": "A"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "thresholds"
+               },
+               "unit": "bytes",
+               "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                 {
+                  "color": "text",
+                  "value": null
+                 }
+                ]
+               }
+              }
+             },
+             "options": {
+              "reduceOptions": {
+               "calcs": [
+                "lastNotNull"
+               ]
+              },
+              "graphMode": "area",
+              "colorMode": "value"
+             }
+            },
+            {
+             "id": 6,
+             "type": "stat",
+             "title": "Cache hit ratio",
+             "description": "Share of block reads served from shared_buffers. A sustained drop below ~99% on a small database means shared_buffers is undersized.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 19,
+              "y": 1,
+              "w": 5,
+              "h": 4
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "100 * sum(rate(pg_stat_database_blks_hit{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))\n  / clamp_min(sum(rate(pg_stat_database_blks_hit{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m])) + sum(rate(pg_stat_database_blks_read{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m])), 1)",
+               "refId": "A"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "thresholds"
+               },
+               "unit": "percent",
+               "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                 {
+                  "color": "red",
+                  "value": null
+                 },
+                 {
+                  "color": "yellow",
+                  "value": 95
+                 },
+                 {
+                  "color": "green",
+                  "value": 99
+                 }
+                ]
+               },
+               "decimals": 2
+              }
+             },
+             "options": {
+              "reduceOptions": {
+               "calcs": [
+                "lastNotNull"
+               ]
+              },
+              "graphMode": "area",
+              "colorMode": "value"
+             }
+            },
+            {
+             "id": 7,
+             "type": "row",
+             "title": "Connections and throughput",
+             "gridPos": {
+              "x": 0,
+              "y": 5,
+              "w": 24,
+              "h": 1
+             }
+            },
+            {
+             "id": 8,
+             "type": "timeseries",
+             "title": "Backends by database",
+             "description": "Per-database backend counts with the max_connections ceiling overlaid.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 0,
+              "y": 6,
+              "w": 12,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "pg_stat_database_numbackends{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "max(pg_settings_max_connections{namespace=~\"$namespace\", job=~\"$job\"})",
+               "refId": "B"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "short",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0,
+               "displayName": "${__field.labels.datname}"
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "max_connections"
+                 },
+                 {
+                  "id": "color",
+                  "value": {
+                   "mode": "fixed",
+                   "fixedColor": "red"
+                  }
+                 },
+                 {
+                  "id": "custom.lineStyle",
+                  "value": {
+                   "fill": "dash",
+                   "dash": [
+                    10,
+                    10
+                   ]
+                  }
+                 },
+                 {
+                  "id": "custom.fillOpacity",
+                  "value": 0
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            },
+            {
+             "id": 9,
+             "type": "timeseries",
+             "title": "Transactions per second",
+             "description": "Commit and rollback rate. A rising rollback share usually means application errors or lock timeouts rather than a database problem.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 12,
+              "y": 6,
+              "w": 12,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_xact_commit{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_xact_rollback{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "B"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "ops",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "A"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "commits/s"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "rollbacks/s"
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            },
+            {
+             "id": 10,
+             "type": "row",
+             "title": "Tuples and block I/O",
+             "gridPos": {
+              "x": 0,
+              "y": 14,
+              "w": 24,
+              "h": 1
+             }
+            },
+            {
+             "id": 11,
+             "type": "timeseries",
+             "title": "Tuple operations per second",
+             "description": "returned greatly exceeding fetched indicates sequential scans returning rows the executor then discards - typically a missing index.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 0,
+              "y": 15,
+              "w": 12,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_tup_returned{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_tup_fetched{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "B"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_tup_inserted{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "C"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_tup_updated{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "D"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_tup_deleted{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "E"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "ops",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "A"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "returned/s"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "fetched/s"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "C"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "inserted/s"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "D"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "updated/s"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "E"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "deleted/s"
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            },
+            {
+             "id": 12,
+             "type": "timeseries",
+             "title": "Block I/O per second",
+             "description": "blks_hit is served from shared_buffers; blks_read went to the OS, and on a container that may still be page cache rather than disk.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 12,
+              "y": 15,
+              "w": 12,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_blks_hit{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_blks_read{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "B"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "ops",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "A"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "buffer hits/s"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "disk reads/s"
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            },
+            {
+             "id": 13,
+             "type": "row",
+             "title": "Checkpoints and background writer",
+             "gridPos": {
+              "x": 0,
+              "y": 23,
+              "w": 24,
+              "h": 1
+             }
+            },
+            {
+             "id": 14,
+             "type": "timeseries",
+             "title": "Checkpoints per second",
+             "description": "Timed checkpoints are driven by checkpoint_timeout. Requested checkpoints mean WAL hit max_wal_size before the timeout - if these dominate, raise max_wal_size.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 0,
+              "y": 24,
+              "w": 12,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_bgwriter_checkpoints_timed_total{namespace=~\"$namespace\", job=~\"$job\"}[5m]))",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_bgwriter_checkpoints_req_total{namespace=~\"$namespace\", job=~\"$job\"}[5m]))",
+               "refId": "B"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "ops",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "A"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "timed/s"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "requested/s"
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            },
+            {
+             "id": 15,
+             "type": "timeseries",
+             "title": "Buffers written per second by source",
+             "description": "Sustained buffers_backend means backends are flushing their own dirty pages because the background writer cannot keep up - a latency source for queries.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 12,
+              "y": 24,
+              "w": 12,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_bgwriter_buffers_checkpoint_total{namespace=~\"$namespace\", job=~\"$job\"}[5m]))",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_bgwriter_buffers_clean_total{namespace=~\"$namespace\", job=~\"$job\"}[5m]))",
+               "refId": "B"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_bgwriter_buffers_backend_total{namespace=~\"$namespace\", job=~\"$job\"}[5m]))",
+               "refId": "C"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "ops",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "A"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "by checkpoint/s"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "by bgwriter/s"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "C"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "by backends/s"
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            },
+            {
+             "id": 16,
+             "type": "row",
+             "title": "Contention and memory pressure",
+             "gridPos": {
+              "x": 0,
+              "y": 32,
+              "w": 24,
+              "h": 1
+             }
+            },
+            {
+             "id": 17,
+             "type": "timeseries",
+             "title": "Locks held by mode",
+             "description": "Growth in AccessExclusiveLock or RowExclusiveLock alongside rising rollbacks points at lock contention.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 0,
+              "y": 33,
+              "w": 8,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum by (mode) (pg_locks_count{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"})",
+               "refId": "A"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "short",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0,
+               "displayName": "${__field.labels.mode}"
+              }
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            },
+            {
+             "id": 18,
+             "type": "timeseries",
+             "title": "Deadlocks and conflicts per second",
+             "description": "Any sustained non-zero deadlock rate is an application bug, not a tuning issue.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 8,
+              "y": 33,
+              "w": 8,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_deadlocks{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_conflicts{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "B"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "ops",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "A"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "deadlocks/s"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "conflicts/s"
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            },
+            {
+             "id": 19,
+             "type": "timeseries",
+             "title": "Temp file churn (work_mem pressure)",
+             "description": "Temp files are sorts and hashes that overflowed work_mem and spilled to the PVC. Non-zero under load means work_mem is too small for the query shapes in play.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 16,
+              "y": 33,
+              "w": 8,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_temp_bytes{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum(rate(pg_stat_database_temp_files{namespace=~\"$namespace\", job=~\"$job\", datname=~\"$datname\"}[5m]))",
+               "refId": "B"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "short",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "A"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "temp bytes/s"
+                 },
+                 {
+                  "id": "unit",
+                  "value": "Bps"
+                 }
+                ]
+               },
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "temp files/s"
+                 },
+                 {
+                  "id": "unit",
+                  "value": "ops"
+                 },
+                 {
+                  "id": "custom.axisPlacement",
+                  "value": "right"
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            },
+            {
+             "id": 20,
+             "type": "row",
+             "title": "Container resources",
+             "gridPos": {
+              "x": 0,
+              "y": 41,
+              "w": 24,
+              "h": 1
+             }
+            },
+            {
+             "id": 21,
+             "type": "timeseries",
+             "title": "Container memory vs limit",
+             "description": "Working set against the container memory limit. Crossing the limit is an OOMKill, not a slowdown. shared_buffers is counted here, so the floor never drops below it.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 0,
+              "y": 42,
+              "w": 12,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=~\"$namespace\", container=\"postgresql\"})",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "max(kube_pod_container_resource_limits{namespace=~\"$namespace\", container=\"postgresql\", resource=\"memory\"})",
+               "refId": "B"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "bytes",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0,
+               "displayName": "${__field.labels.pod}"
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "memory limit"
+                 },
+                 {
+                  "id": "color",
+                  "value": {
+                   "mode": "fixed",
+                   "fixedColor": "red"
+                  }
+                 },
+                 {
+                  "id": "custom.lineStyle",
+                  "value": {
+                   "fill": "dash",
+                   "dash": [
+                    10,
+                    10
+                   ]
+                  }
+                 },
+                 {
+                  "id": "custom.fillOpacity",
+                  "value": 0
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            },
+            {
+             "id": 22,
+             "type": "timeseries",
+             "title": "Container CPU cores",
+             "description": "CPU cores used against the request. No CPU limit is set on this chart, so there is no CFS throttling - the request only sets the scheduling share.",
+             "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+             },
+             "gridPos": {
+              "x": 12,
+              "y": 42,
+              "w": 12,
+              "h": 8
+             },
+             "targets": [
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container=\"postgresql\"}[5m]))",
+               "refId": "A"
+              },
+              {
+               "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+               },
+               "expr": "max(kube_pod_container_resource_requests{namespace=~\"$namespace\", container=\"postgresql\", resource=\"cpu\"})",
+               "refId": "B"
+              }
+             ],
+             "fieldConfig": {
+              "defaults": {
+               "color": {
+                "mode": "palette-classic"
+               },
+               "unit": "short",
+               "custom": {
+                "fillOpacity": 8,
+                "showPoints": "never"
+               },
+               "min": 0,
+               "displayName": "${__field.labels.pod}"
+              },
+              "overrides": [
+               {
+                "matcher": {
+                 "id": "byFrameRefID",
+                 "options": "B"
+                },
+                "properties": [
+                 {
+                  "id": "displayName",
+                  "value": "cpu request"
+                 },
+                 {
+                  "id": "color",
+                  "value": {
+                   "mode": "fixed",
+                   "fixedColor": "blue"
+                  }
+                 },
+                 {
+                  "id": "custom.lineStyle",
+                  "value": {
+                   "fill": "dash",
+                   "dash": [
+                    10,
+                    10
+                   ]
+                  }
+                 },
+                 {
+                  "id": "custom.fillOpacity",
+                  "value": 0
+                 }
+                ]
+               }
+              ]
+             },
+             "options": {
+              "legend": {
+               "displayMode": "table",
+               "placement": "bottom",
+               "calcs": [
+                "lastNotNull",
+                "max"
+               ]
+              },
+              "tooltip": {
+               "mode": "multi",
+               "sort": "desc"
+              }
+             }
+            }
+           ]
           }
