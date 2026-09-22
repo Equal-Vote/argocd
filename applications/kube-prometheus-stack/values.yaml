@@ -21,7 +21,13 @@ defaultRules:
     # Genuine apiserver problems still page via KubeAPIDown / KubeAPIErrorBudgetBurn.
     KubeClientErrors: true
 
-nodeExporter:
+# NOTE: `nodeExporter` is the PARENT chart's key -- it only toggles the subchart
+# and configures its ServiceMonitor, and has no `resources` field. Anything set
+# under it is silently dropped, which left the DaemonSet with no requests at all
+# on every node. Container resources belong to the subchart, named
+# `prometheus-node-exporter` (no alias in Chart.yaml).
+# Verify: helm template ... | yq 'select(.kind=="DaemonSet").spec.template.spec.containers[0].resources'
+prometheus-node-exporter:
   resources:
     requests:
       cpu: 10m
@@ -43,12 +49,6 @@ prometheusOperator:
     limits:
       memory: 100Mi
 alertmanager:
-  resources:
-    requests:
-      cpu: 10m
-      memory: 100Mi
-    limits:
-      memory: 100Mi
   config:
     route:
       # Uncomment this if alerts are too spammy.
@@ -77,6 +77,15 @@ alertmanager:
         # title: "{{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"
         # text: "{{ range .Alerts }}{{ .Annotations.description }}\n{{ end }}"
   alertmanagerSpec:
+    # NOTE: must live under alertmanagerSpec, not on `alertmanager` directly --
+    # the parent key has no `resources` field, so setting it there is dropped and
+    # the Alertmanager CR renders with no requests or limits at all.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        memory: 100Mi
     storage:
       volumeClaimTemplate:
         spec:
@@ -106,19 +115,40 @@ alertmanager:
       - alertmanager.prod.equal.vote
 prometheus:
   prometheusSpec:
+    # Sized for the election load study. Measured 2026-09-22: 66,051 active
+    # series at 412Mi, i.e. ~6.4KB/series, against a 440Mi limit -- 94% full
+    # before any extra load. Enabling ingress-nginx metrics adds per-ingress
+    # histogram series on top of that, so the old limit would OOM the very
+    # Prometheus collecting the election data. 2Gi leaves room for the new
+    # series plus growth; memory request == limit so kubelet eviction, which
+    # ranks on usage over request, puts this last in line.
     resources:
       requests:
         cpu: 76m
-        memory: 440Mi
+        memory: 2Gi
       limits:
-        memory: 440Mi
-    storage:
-      enabled: true
+        memory: 2Gi
+    # NOTE: the key is `storageSpec`, NOT `storage`. Alertmanager above uses
+    # `alertmanagerSpec.storage`, but prometheusSpec spells it `storageSpec`.
+    # Helm does not error on unknown values keys, so the wrong spelling is
+    # silently dropped and the operator falls back to an emptyDir -- metrics
+    # then die with the pod and `retention` below is decorative.
+    # Verify after any edit here:
+    #   kubectl get prometheus -n kube-prometheus-stack -o jsonpath='{.items[0].spec.storage}'
+    storageSpec:
       volumeClaimTemplate:
         spec:
           resources:
             requests:
-              storage: 1Gi
+              # Measured 2026-09-22: 10d of retention = 3.67Gi of blocks + 271Mi
+              # of WAL at 66k active series / 30s scrape. 16Gi is ~4x that, which
+              # leaves room for compaction and for series growth under election
+              # load. Also lands exactly on the Azure Standard SSD E3 tier.
+              storage: 16Gi
+    # Safety valve: prune before the filesystem fills. A full disk wedges the
+    # TSDB, which loses far more than aging data out does. Kept at 75% of the
+    # PVC because retention.size does not account for the WAL.
+    retentionSize: 12GiB
   ingress:
     enabled: true
     annotations:
