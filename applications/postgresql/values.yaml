@@ -41,15 +41,20 @@ auth:
     userPasswordKey: "application"
     replicationPasswordKey: "replicator"
 primary:
+  # Sized for Standard_B4ps_v2 nodes (4 vCPU, 16Gi, ~12Gi allocatable after the
+  # AKS kubelet reservation). 2Gi still leaves a single node able to hold every
+  # pod in the cluster if the other one goes away.
   resources:
     requests:
-      cpu: 34m
-      memory: 256Mi
+      cpu: 250m
+      memory: 2Gi
     limits:
-      memory: 256Mi
+      memory: 2Gi
   extendedConfiguration: |
-    shared_buffers = 64MB              # 25% of 256Mi memory (lower than default due to memory constraints)
-    effective_cache_size = 128MB        # 50% of 256Mi memory (planner hint only, not actual allocation)
+    shared_buffers = 512MB              # 25% of 2Gi memory (the whole ~600MB database fits here)
+    effective_cache_size = 1GB          # 50% of 2Gi memory (planner hint only, not actual allocation)
+    work_mem = 8MB                      # Raised from 4MB now that there is memory to spare
+    maintenance_work_mem = 128MB        # Raised from 64MB to speed up VACUUM and index builds
     checkpoint_timeout = 10min          # Increased from 5min to reduce checkpoint frequency
-    min_wal_size = 32MB                 # Reduced from 80MB (small database, less WAL overhead)
-    max_wal_size = 128MB                # Reduced from 400MB (small database, smaller WAL footprint)
+    min_wal_size = 128MB                # Raised from 32MB: fewer WAL segment recycles between checkpoints
+    max_wal_size = 512MB                # Raised from 128MB; pg_wal shares the 8Gi PVC, which is 7.2Gi free
