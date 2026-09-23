@@ -15,3 +15,21 @@ controller:
       memory: 100Mi
     limits:
       memory: 100Mi
+
+  # The controller serves no metrics at all by default (metrics.enabled is false
+  # in the chart), which is why nothing was scraping it and the Grafana dashboard
+  # in kube-prometheus-stack would otherwise render empty panels.
+  #
+  # This does NOT widen the public LoadBalancer: the chart puts port 10254 on a
+  # separate ClusterIP Service (ingress-nginx-controller-metrics) and leaves the
+  # LoadBalancer with 80/443 only.
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        # This Prometheus selects ServiceMonitors with
+        # serviceMonitorSelector.matchLabels.release=kube-prometheus-stack.
+        # Without this label the ServiceMonitor is created and then ignored.
+        # (Its namespace selector is empty, so cross-namespace is fine.)
+        release: kube-prometheus-stack
