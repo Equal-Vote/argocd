@@ -163,6 +163,35 @@ prometheus:
       hosts:
       - prometheus.prod.equal.vote
 grafana:
+  # Keep Grafana's background plugin installer from touching the bundled plugins.
+  #
+  # Grafana 13 ships prometheus, loki, tempo, mysql, elasticsearch and friends as
+  # *bundled* plugins under /usr/share/grafana/data/plugins-bundled, and the
+  # backgroundinstaller preinstalls that same list on every start. With
+  # preinstall_auto_update on it finds each one already present but out of date
+  # (e.g. prometheus 13.1.7 -> 13.1.9) and runs an update: it deregisters the
+  # running plugin, then unlinks the old directory. The chart sets
+  # readOnlyRootFilesystem: true, so the unlink fails --
+  #   "Failed to install plugin" pluginId=prometheus
+  #     error="unlinkat /usr/share/grafana/data/plugins-bundled/prometheus:
+  #            read-only file system"
+  # -- and the plugin is left deregistered. Grafana then logs
+  #   "Could not find plugin definition for data source" datasource_type=prometheus
+  # on every /api/frontend/settings call and drops the Prometheus datasource from
+  # the frontend list, which empties the datasource dropdown on *every* dashboard
+  # and leaves all panels unable to resolve ${DS_PROMETHEUS} / ${datasource}.
+  # /var/lib/grafana is an emptyDir here, so this recurred on every restart.
+  #
+  # preinstall_auto_update: false makes the installer skip plugins that are already
+  # present, which is all of the bundled ones. The apps that genuinely are missing
+  # (lokiexplore, metricsdrilldown, pyroscope, exploretraces, advisor) still install
+  # into /var/lib/grafana/plugins, which is writable. Use preinstall_disabled: true
+  # instead if you also want those five gone -- they are re-downloaded from
+  # grafana.com on every restart and are part of the idle memory floor below.
+  grafana.ini:
+    plugins:
+      preinstall_auto_update: false
+
   # 512Mi, not the 232Mi KRR recommended on 2026-05-04. That number was measured
   # against Grafana 12.4.2 (chart 82.17.1), which peaked at 184Mi. Chart 90.0.0
   # ships Grafana 13.2.1, whose unified-storage bleve search index and background
