@@ -1,0 +1,15 @@
+# Chart sources for the Flux-managed apps.
+#
+# Only CloudNativePG is here. The generic `devopscoop/charts/app` wrapper that
+# ArgoCD uses for fider is replaced by flux/base/app, so the Flux path pulls no
+# third-party application chart at all.
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: cloudnative-pg
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://cloudnative-pg.github.io/charts
+---
