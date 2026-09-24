@@ -9,6 +9,25 @@ spec:
         revision: "HEAD"
         files:
           - path: "applications/**/config.json"
+
+  syncPolicy:
+    # Removing an app's config.json takes its Application out of this set, and by
+    # default ArgoCD then runs resources-finalizer and deletes everything the app
+    # owned. That is a different path from `prune` below, and it does reach data:
+    #
+    #   Application fider-db  ->  owns postgresql.cnpg.io/Cluster/fider-db
+    #   Cluster fider-db      ->  ownerReference on PVC fider-db-1 (controller)
+    #   PVC fider-db-1        ->  PV pvc-df9a66c8, reclaim policy Delete
+    #
+    # So retiring or migrating an app destroys its database. `prune` genuinely
+    # cannot reach a PVC, because no PVC here is managed by ArgoCD -- but the
+    # finalizer does not prune, it deletes the Cluster, and Kubernetes garbage
+    # collects the PVC from the ownerReference.
+    #
+    # With this set, removing a config.json orphans the resources instead. They
+    # keep running, and cleanup becomes a deliberate separate act.
+    preserveResourcesOnDeletion: true
+
   template:
     metadata:
       name: "{{application.name}}"
