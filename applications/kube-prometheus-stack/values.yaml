@@ -70,7 +70,7 @@ alertmanager:
       # https://prometheus.io/docs/alerting/latest/configuration/#slack_config
       slack_configs:
       - api_url_file: /etc/alertmanager/secrets/alertmanager-slack/slack_webhook_url
-        channel: "#_bettervoting"
+        channel: "#_bettervoting-alerts"
         send_resolved: true
         # TODO: Should we enable this?
         # https://prometheus.io/docs/alerting/latest/notification_examples/#ranging-over-all-received-alerts
