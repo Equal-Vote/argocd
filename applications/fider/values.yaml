@@ -56,6 +56,9 @@ env:
         key: EMAIL_SMTP_PASSWORD
   - name: LOG_LEVEL
     value: "info"
+  # Keep logs on stdout; the SQL logger has no retention policy.
+  - name: LOG_SQL
+    value: "false"
   - name: BLOB_STORAGE
     value: "sql"
 service:
@@ -75,9 +78,16 @@ resources:
     memory: 384Mi
   limits:
     memory: 640Mi
+# The dedicated health endpoint checks the DB without logging each probe.
 livenessProbe:
   httpGet:
+    path: /_health
     port: 3000
 readinessProbe:
   httpGet:
+    path: /_health
+    port: 3000
+startupProbe:
+  httpGet:
+    path: /_health
     port: 3000

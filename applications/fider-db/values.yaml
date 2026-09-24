@@ -13,7 +13,8 @@ cluster:
   # https://cloudnative-pg.io/documentation/current/kubernetes_upgrade/#pod-disruption-budgets
   enablePDB: false
   storage:
-    size: 1Gi
+    # Leave headroom for retained WAL and database growth.
+    size: 5Gi
   resources:
     requests:
       cpu: 10m
