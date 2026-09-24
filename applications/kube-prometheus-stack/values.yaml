@@ -192,19 +192,26 @@ grafana:
     plugins:
       preinstall_auto_update: false
 
-  # 512Mi, not the 232Mi KRR recommended on 2026-05-04. That number was measured
-  # against Grafana 12.4.2 (chart 82.17.1), which peaked at 184Mi. Chart 90.0.0
-  # ships Grafana 13.2.1, whose unified-storage bleve search index and background
-  # plugin installer put the idle floor at ~213Mi, so every dashboard load crossed
-  # 232Mi and got the container OOMKilled -- which is what ingress-nginx turned
-  # into 502/503s. Do not lower this from a KRR run taken while the old limit was
-  # clamping the peak; re-measure with headroom first.
+  # 1Gi. KRR recommended 232Mi on 2026-05-04, measured against Grafana 12.4.2
+  # (chart 82.17.1), which peaked at 184Mi. Chart 90.0.0 ships Grafana 13.2.1,
+  # whose unified-storage bleve search index and background plugin installer put
+  # the idle floor at ~213Mi, so every dashboard load crossed 232Mi and got the
+  # container OOMKilled -- which is what ingress-nginx turned into 502/503s.
+  #
+  # 512Mi was that fix, and it OOMKilled too (2026-09-23T04:22:23Z, exit 137).
+  # max_over_time(container_memory_working_set_bytes{container="grafana"}[7d])
+  # read 502-511Mi on every replica -- pinned to the ceiling, not peaking below
+  # it -- against a 242Mi idle floor. Both earlier numbers were set from a peak
+  # the then-current limit was already clamping, so this one doubles rather than
+  # trims: 1Gi is the first limit with room to observe an unclamped peak.
+  # Do not lower it from a KRR run taken while the limit is clamping; re-measure
+  # with headroom first.
   resources:
     requests:
       cpu: 10m
-      memory: 512Mi
+      memory: 1Gi
     limits:
-      memory: 512Mi
+      memory: 1Gi
   sidecar:
     resources:
       requests:

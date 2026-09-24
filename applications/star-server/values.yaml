@@ -75,12 +75,21 @@ env:
         key: AZURE_STORAGE_CONNECTION_STRING
 service:
   port: 5000
+# 512Mi, up from 256Mi. Both replicas OOMKilled in the same second
+# (2026-09-24T18:56:26Z, exit 137), which points at a shared traffic spike
+# rather than a leak -- a leak would not land two independently started pods
+# together. max_over_time(container_memory_working_set_bytes{container="app"}[7d])
+# only reads ~210Mi, but cAdvisor samples on a 30s interval and the kernel OOM
+# killer does not: the sampled peak never caught the allocation that crossed
+# 256Mi. Steady state is 205-210Mi, so the old limit left ~45Mi of headroom for
+# a request burst across 2 replicas. Request == limit so kubelet eviction, which
+# ignores limits, sees the real footprint.
 resources:
   requests:
     cpu: 10m
-    memory: 256Mi
+    memory: 512Mi
   limits:
-    memory: 256Mi
+    memory: 512Mi
 livenessProbe:
   httpGet:
     port: 5000
