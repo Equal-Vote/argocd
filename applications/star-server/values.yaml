@@ -53,6 +53,16 @@ env:
     value: "43160"
   - name: FROM_EMAIL_ADDRESS
     value: "elections@star.vote"
+  # Outbound email pacing (backend default is 600/min). 2026-09-24: a 26.8k-voter
+  # blast at 600/min ran cleanly for 8 minutes, then Gmail rate-limited the
+  # star.vote domain (421 4.7.28 "unusual rate of mail ... from your DKIM domain")
+  # and deferred ~80% of the remaining Gmail-bound mail for hours. 120/min is
+  # slow enough to watch bounces and cancel un-started jobs before a problem
+  # compounds; a 26k election takes ~3.7h instead of 45min. The pacing is
+  # stored on the queued job rows, so this only affects sends started after
+  # the change -- in-flight sends keep the spacing they were enqueued with.
+  - name: EMAIL_SEND_RATE_PER_MINUTE
+    value: "120"
   - name: DATABASE_URL
     valueFrom:
       secretKeyRef:
