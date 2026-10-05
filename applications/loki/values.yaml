@@ -63,10 +63,12 @@ sidecar:
 
 singleBinary:
   replicas: 1
+  # The request sits at 384Mi, just above the 10d peak of 351Mi (measured
+  # 2026-10-05). The 512Mi limit stays as room for query spikes.
   resources:
     requests:
       cpu: 28m
-      memory: 512Mi
+      memory: 384Mi
     limits:
       memory: 512Mi
   persistence:
@@ -83,9 +85,9 @@ lokiCanary:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 64Mi
     limits:
-      memory: 100Mi
+      memory: 64Mi
 
 # Disable monitoring components to save resources
 resultsCache:

@@ -18,9 +18,9 @@ metrics:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 64Mi
     limits:
-      memory: 100Mi
+      memory: 64Mi
   serviceMonitor:
     enabled: true
     # kube-prometheus-stack runs Prometheus with serviceMonitorSelectorNilUsesHelmValues
@@ -41,20 +41,23 @@ auth:
     userPasswordKey: "application"
     replicationPasswordKey: "replicator"
 primary:
-  # Sized for Standard_B4ps_v2 nodes (4 vCPU, 16Gi, ~12Gi allocatable after the
-  # AKS kubelet reservation). 2Gi still leaves a single node able to hold every
-  # pod in the cluster if the other one goes away.
+  # 1Gi, down from 2Gi, for Standard_D2ps_v6 nodes (2 vCPU, 8Gi, ~5.7Gi
+  # allocatable after the AKS kubelet reservation). Measured 2026-10-05 over the
+  # 10d Prometheus window: 845Mi peak working set with shared_buffers at 512MB,
+  # 580MB database, 35 backends max. shared_buffers is halved below, which takes
+  # ~256MB off that peak. Request == limit so this pod is last in line for
+  # kubelet eviction.
   resources:
     requests:
       cpu: 250m
-      memory: 2Gi
+      memory: 1Gi
     limits:
-      memory: 2Gi
+      memory: 1Gi
   extendedConfiguration: |
-    shared_buffers = 512MB              # 25% of 2Gi memory (the whole ~600MB database fits here)
-    effective_cache_size = 1GB          # 50% of 2Gi memory (planner hint only, not actual allocation)
-    work_mem = 8MB                      # Raised from 4MB now that there is memory to spare
-    maintenance_work_mem = 128MB        # Raised from 64MB to speed up VACUUM and index builds
+    shared_buffers = 256MB              # 25% of 1Gi memory; the OS page cache holds the rest of the ~580MB database
+    effective_cache_size = 768MB        # 75% of 1Gi memory (planner hint only, not actual allocation)
+    work_mem = 4MB                      # Back to the default; 35 backends x 8MB no longer fits comfortably
+    maintenance_work_mem = 64MB         # Back to the default for the smaller memory budget
     checkpoint_timeout = 10min          # Increased from 5min to reduce checkpoint frequency
     min_wal_size = 128MB                # Raised from 32MB: fewer WAL segment recycles between checkpoints
     max_wal_size = 512MB                # Raised from 128MB; pg_wal shares the 8Gi PVC, which is 7.2Gi free

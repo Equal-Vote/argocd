@@ -31,23 +31,23 @@ prometheus-node-exporter:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 64Mi
     limits:
-      memory: 100Mi
+      memory: 64Mi
 kube-state-metrics:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 64Mi
     limits:
-      memory: 100Mi
+      memory: 64Mi
 prometheusOperator:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 64Mi
     limits:
-      memory: 100Mi
+      memory: 64Mi
 alertmanager:
   config:
     route:
@@ -83,9 +83,9 @@ alertmanager:
     resources:
       requests:
         cpu: 10m
-        memory: 100Mi
+        memory: 64Mi
       limits:
-        memory: 100Mi
+        memory: 64Mi
     storage:
       volumeClaimTemplate:
         spec:
@@ -95,9 +95,9 @@ alertmanager:
     configReloaderResources:
       requests:
         cpu: 10m
-        memory: 100Mi
+        memory: 64Mi
       limits:
-        memory: 100Mi
+        memory: 64Mi
     secrets:
     - alertmanager-slack
   ingress:
@@ -122,12 +122,18 @@ prometheus:
     # Prometheus collecting the election data. 2Gi leaves room for the new
     # series plus growth; memory request == limit so kubelet eviction, which
     # ranks on usage over request, puts this last in line.
+    #
+    # 1Gi, down from 2Gi, for the move to Standard_D2ps_v6 nodes (~5.7Gi
+    # allocatable each). Measured 2026-10-05 with ingress-nginx metrics on: 76k
+    # head series steady, 140k during the node rotation (old and new pods'
+    # series both in the head), and a 758Mi peak working set across that spike.
+    # 1Gi leaves ~35% over that peak.
     resources:
       requests:
         cpu: 76m
-        memory: 2Gi
+        memory: 1Gi
       limits:
-        memory: 2Gi
+        memory: 1Gi
     # NOTE: the key is `storageSpec`, NOT `storage`. Alertmanager above uses
     # `alertmanagerSpec.storage`, but prometheusSpec spells it `storageSpec`.
     # Helm does not error on unknown values keys, so the wrong spelling is
@@ -206,10 +212,14 @@ grafana:
   # trims: 1Gi is the first limit with room to observe an unclamped peak.
   # Do not lower it from a KRR run taken while the limit is clamping; re-measure
   # with headroom first.
+  #
+  # Re-measured 2026-10-05 under the 1Gi limit: 868Mi peak, unclamped. The limit
+  # stays; the request drops to just above that peak so the half-size
+  # Standard_D2ps_v6 nodes can schedule it alongside everything else.
   resources:
     requests:
       cpu: 10m
-      memory: 1Gi
+      memory: 896Mi
     limits:
       memory: 1Gi
   sidecar:

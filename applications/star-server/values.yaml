@@ -92,12 +92,15 @@ service:
 # only reads ~210Mi, but cAdvisor samples on a 30s interval and the kernel OOM
 # killer does not: the sampled peak never caught the allocation that crossed
 # 256Mi. Steady state is 205-210Mi, so the old limit left ~45Mi of headroom for
-# a request burst across 2 replicas. Request == limit so kubelet eviction, which
-# ignores limits, sees the real footprint.
+# a request burst across 2 replicas.
+#
+# Request 384Mi, below the limit, for the move to half-size Standard_D2ps_v6
+# nodes. 10d peak measured 2026-10-05 was 295Mi, so the request still covers the
+# sampled peak plus ~30%; the 512Mi limit is kept for the unsampled bursts above.
 resources:
   requests:
     cpu: 10m
-    memory: 512Mi
+    memory: 384Mi
   limits:
     memory: 512Mi
 livenessProbe:

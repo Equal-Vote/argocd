@@ -70,12 +70,18 @@ service:
 # resident -- so ~356MB is the real steady state, not a transient spike, and it
 # is reached the moment anyone submits a suggestion. At the old 200Mi limit the
 # pod was OOMKilled mid-request on every first post, which reads to the user as
-# the submit hanging forever. The request matters as much as the limit: at
-# 100Mi the scheduler was sizing this pod at under a third of what it holds.
+# the submit hanging forever.
+#
+# Request 128Mi, down from 384Mi, for the move to half-size Standard_D2ps_v6
+# nodes. Posts are rare: the 10d peak measured 2026-10-05 was 35Mi, so the pod
+# spends most restarts at its idle floor and never loads the models. The 640Mi
+# limit still covers the ~356MB post-insert footprint. The tradeoff: after a
+# post, the pod is over its request and among the first evicted under node
+# memory pressure.
 resources:
   requests:
     cpu: 10m
-    memory: 384Mi
+    memory: 128Mi
   limits:
     memory: 640Mi
 # The dedicated health endpoint checks the DB without logging each probe.
