@@ -44,10 +44,12 @@ server:
       memory: 100Mi
 
 repoServer:
+  # Request only, no limit (see TODO). 384Mi matches the 10d peak measured
+  # 2026-10-05; it was 512Mi.
   resources:
     requests:
       cpu: 10m
-      memory: 512Mi
+      memory: 384Mi
     # TODO: I keep raising the limit, and it keeps getting OOMKilled. I don't know what the limit needs to be. Disabling for now.
     # limits:
     #   memory: 512Mi
@@ -151,37 +153,44 @@ repoServer:
     - mountPath: /custom-tools
       name: custom-tools
 
-applicationController:
+# NOTE: the chart keys are `controller` and `notifications`. These were
+# `applicationController` and `notificationsController`, which Helm silently
+# drops, so both pods ran with no requests or limits at all and the scheduler
+# never counted the controller's ~555Mi.
+# Verify: kubectl get sts -n argocd argocd-application-controller -o jsonpath='{.spec.template.spec.containers[0].resources}'
+controller:
+  # 10d peak 555Mi, measured 2026-10-05.
   resources:
     requests:
       cpu: 59m
-      memory: 650Mi
+      memory: 640Mi
     limits:
-      memory: 650Mi
+      memory: 640Mi
 
-notificationsController:
+notifications:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 64Mi
     limits:
-      memory: 100Mi
+      memory: 64Mi
 
 dex:
+  # 10d peak 96Mi, measured 2026-10-05, which was 96% of the old 100Mi limit.
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 128Mi
     limits:
-      memory: 100Mi
+      memory: 128Mi
 
 redis:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 64Mi
     limits:
-      memory: 100Mi
+      memory: 64Mi
 
 applicationSet:
   resources:
