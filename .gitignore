@@ -1,2 +1,5 @@
-clusterissuer.yaml
+# Only the root-level render from utils/clusterissuer.template.txt. The
+# real manifest is tracked at secrets/clusterissuer.yaml -- an unanchored
+# pattern would match that too.
+/clusterissuer.yaml
 local/**

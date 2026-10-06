@@ -53,13 +53,17 @@ sops --encrypt secrets/secrets.enc.yaml > secrets/secrets.enc.yaml
 
 ## ClusterIssuer
 
-`clusterissuer.yaml` is **gitignored**. Generate it from template:
+Tracked at `secrets/clusterissuer.yaml` and applied by the `bootstrap-secrets`
+app through `secrets/kustomization.yaml`. Edit it and push; no manual apply.
 
-```sh
-export EMAIL_ADDRESS=gmail@evanstucker.com
-envsubst < utils/clusterissuer.template.txt > clusterissuer.yaml
-kubectl apply -f clusterissuer.yaml
-```
+`utils/clusterissuer.template.txt` is kept as the record of where the five values
+come from when standing up a new environment. Rendering it writes to
+`/clusterissuer.yaml`, which stays gitignored — if you use it, copy the result
+into `secrets/clusterissuer.yaml` rather than applying it directly.
+
+Nothing in it is secret: the subscription ID is already in
+`applications/external-dns/values.yaml`, and managed-identity client IDs are
+committed in plaintext elsewhere in this repo.
 
 ## Azure resource names
 
@@ -96,4 +100,5 @@ Defined once in the ApplicationSet template at `applications/applicationset.yaml
   and its CRDs have to exist before the `core` / `post` apps whose Ingresses trigger
   ingress-shim. It also carries its own CRDs (`crds.enabled: true`).
 - `applications-disabled/matomo` is the only disabled app
-- `local/` and `clusterissuer.yaml` are gitignored
+- `local/` and a root-level `/clusterissuer.yaml` render are gitignored; the
+  real manifest lives at `secrets/clusterissuer.yaml`
