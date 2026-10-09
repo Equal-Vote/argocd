@@ -20,6 +20,15 @@ defaultRules:
     # only control plane job we can scrape, so turning it off costs no real coverage.
     # Genuine apiserver problems still page via KubeAPIDown / KubeAPIErrorBudgetBurn.
     KubeClientErrors: true
+    # These fire when the pods' total CPU / memory requests wouldn't fit on the
+    # cluster minus its largest node, i.e. when it can't survive losing a node. We
+    # deliberately run two Standard_D2ps_v6 nodes sized so the workloads need both
+    # (terraform #72, argocd #88: memory requests target ~81% of the two nodes), so
+    # both fire permanently. Real squeezes still surface as unschedulable pods,
+    # OOMKills and crash loops (KubePodNotReady, KubeContainerWaiting,
+    # KubePodCrashLooping).
+    KubeCPUOvercommit: true
+    KubeMemoryOvercommit: true
 
 # NOTE: `nodeExporter` is the PARENT chart's key -- it only toggles the subchart
 # and configures its ServiceMonitor, and has no `resources` field. Anything set
