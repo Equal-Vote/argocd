@@ -199,3 +199,30 @@ applicationSet:
       memory: 100Mi
     limits:
       memory: 100Mi
+
+# Cluster-wide objects that no other chart owns. The argo-cd chart's
+# extraObjects is just the most convenient place to emit them.
+extraObjects:
+  # Same as AKS's built-in managed-csi class, except reclaimPolicy: Retain, so
+  # deleting a PVC (or the namespace it lives in) leaves its Azure disk in
+  # place instead of deleting it. Released PVs and their disks must then be
+  # cleaned up by hand.
+  #
+  # Not the default class: AKS manages the built-in `default` class, so we
+  # can't reliably remove its default annotation. Set
+  # storageClassName: managed-csi-retain explicitly on new PVCs. Existing
+  # StatefulSets can't switch, because volumeClaimTemplates are immutable;
+  # patch their PVs to Retain instead.
+  #
+  # reclaimPolicy and parameters are immutable, so changing them later means
+  # deleting and recreating this StorageClass. That doesn't affect existing PVs.
+  - apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: managed-csi-retain
+    provisioner: disk.csi.azure.com
+    parameters:
+      skuname: StandardSSD_LRS
+    reclaimPolicy: Retain
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
