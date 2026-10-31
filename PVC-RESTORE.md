@@ -46,96 +46,89 @@ VOLUME:.spec.volumeName
 
 Expected empty PVCs:
 
-| Namespace  | PVC Name            | Size | PV (auto-provisioned) |
-| ---------- | ------------------- | ---- | --------------------- |
-| `starvote` | `data-postgresql-0` | 8Gi  | `pvc-<new-uuid>`      |
-| `keycloak` | `data-postgresql-0` | 8Gi  | `pvc-<new-uuid>`      |
-| `loki`     | `data-loki-0`       | 10Gi | `pvc-<new-uuid>`      |
+| Namespace  | PVC Name                     | Size | PV (auto-provisioned) |
+| ---------- | ---------------------------- | ---- | --------------------- |
+| `starvote` | `data-postgresql-0`          | 8Gi  | `pvc-<new-uuid>`      |
+| `keycloak` | `data-keycloak-postgresql-0` | 8Gi  | `pvc-<new-uuid>`      |
+| `loki`     | `storage-loki-0`             | 10Gi | `pvc-<new-uuid>`      |
 
 Record the PV names — you need to delete them (they point to the empty disks).
 
-## 4. Identify Original (Deleted) Disks in the Backup Vault
+## 4. Find the Backup Instance for Each PVC
 
 The vault (`equalvote-backup-vault`) is a Data Protection backup vault — use
 `az dataprotection` commands, not `az backup`.
 
-List all backup instances (named after the original disk UUIDs):
+Backup instances are named after the original disk (`pvc-<uuid>`), which says
+nothing about the workload. The mapping lives in
+[`tagged-disks.auto.tfvars`](https://github.com/Equal-Vote/terraform/blob/main/tagged-disks.auto.tfvars)
+in the terraform repo: `tag-pvc-disks.sh` writes each disk's PVC as a
+`# namespace/pvc` comment, from the tags the CSI driver puts on the disk, and
+keeps the entry after the disk is deleted.
+
+List every backup instance with its PVC and latest recovery point:
 
 ```bash
-az dataprotection backup-instance list \
-  --vault-name equalvote-backup-vault \
-  --resource-group equalvote \
-  --query "[].{name:name, status:properties.currentProtectionState}" \
-  -o table
-```
+LABELS=$(curl -fsSL https://raw.githubusercontent.com/Equal-Vote/terraform/main/tagged-disks.auto.tfvars \
+  | sed -n '/^disk_ids = \[/,/^\]/p' \
+  | sed -nE 's#.*/disks/(pvc-[^"]*)", \# (.*)#\1 \2#p')
 
-Expected output — three original disks that were being backed up before deletion:
-
-```
-Name                                      Status
-----------------------------------------  --------------------
-pvc-3cd6e8ba-fb7f-4031-a69d-e5cd96e8efba  ProtectionConfigured
-pvc-56229c63-fd75-49d0-8f6b-7ce7d107bc68  ProtectionConfigured
-pvc-7d5e2740-7f0a-4115-acbe-b84975edf773  ProtectionConfigured
-```
-
-For each backup instance, find the latest recovery point and the disk size
-(stored as JSON in the recovery point metadata):
-
-```bash
 for INSTANCE in $(az dataprotection backup-instance list \
   --vault-name equalvote-backup-vault \
   --resource-group equalvote \
   --query "[].name" -o tsv); do
 
-  RP_ID=$(az dataprotection recovery-point list \
+  RP=$(az dataprotection recovery-point list \
     --backup-instance-name "$INSTANCE" \
     --vault-name equalvote-backup-vault \
     --resource-group equalvote \
-    --query "max_by([], &properties.recoveryPointTime).name" -o tsv)
+    --query "max_by([], &properties.recoveryPointTime).join(' ', [name, properties.recoveryPointTime])" -o tsv)
 
-  META=$(az dataprotection recovery-point show \
-    --backup-instance-name "$INSTANCE" \
-    --vault-name equalvote-backup-vault \
-    --resource-group equalvote \
-    --recovery-point-id "$RP_ID" \
-    --query "properties.recoveryPointDataStoresDetails[0].metaData" -o tsv)
-
-  SIZE=$(echo "$META" | python3 -c "
-import sys, json
-d = json.loads(sys.stdin.read())[0]
-print(f\"{d['sizeBytes'] / 1024**3:.0f}GiB\")
-")
-
-  echo "$INSTANCE  latest=$RP_ID  size=$SIZE"
+  PVC=$(awk -v i="$INSTANCE" '$1 == i { print $2 }' <<< "$LABELS")
+  echo "$INSTANCE  ${PVC:-<no label>}  $RP"
 done
 ```
 
-## 5. Map Original Disks to Workloads by Size
+Example output (from 2026-10-31, prometheus/alertmanager PVC names shortened):
 
-The recovery point metadata reveals the disk size. Use it to identify each
-workload:
+```
+pvc-eed94c08-a919-4ddf-8463-c7d5a49cdc45  kube-prometheus-stack/alertmanager-…-0  9cfde15e461344199b9d67381a98f8d8 2026-10-31T02:04:14.8742085Z
+pvc-00a3f621-3d0d-4473-bab2-071cd9356775  fider/fider-db-1  937cb7b512d649cb8d11198e17e8d3a2 2026-10-31T02:03:46.4715662Z
+pvc-56229c63-fd75-49d0-8f6b-7ce7d107bc68  keycloak/data-keycloak-postgresql-0  3e9d2f0953704fe49f52ff15795fd5dd 2026-10-31T02:04:12.5460269Z
+pvc-3cd6e8ba-fb7f-4031-a69d-e5cd96e8efba  starvote/data-postgresql-0  1acd1a9abdbd4034af1e51878f4e0ef4 2026-10-31T02:04:33.0604876Z
+pvc-df9a66c8-ccec-435e-936b-5bf2f6745465  fider/fider-db-1  4e019c306ab041b1be2da085d4fceee9 2026-10-31T02:04:27.9989792Z
+pvc-b3bbf7bd-fd95-4947-80aa-5ee343009001  loki/storage-loki-0  8440c67bea84483b8ecb1cf1c7d79557 2026-10-31T02:06:34.1259180Z
+pvc-a144bae2-f4fd-4e6f-ae57-4f988ba4ca07  kube-prometheus-stack/prometheus-…-0  7bd39519b0a24dbaa58fb928b39fe467 2026-10-31T02:04:34.8144835Z
+```
 
-| Size  | Workload                    | Namespace  |
-| ----- | --------------------------- | ---------- |
-| 8GiB  | PostgreSQL (starvote)       | `starvote` |
-| 8GiB  | Keycloak bundled PostgreSQL | `keycloak` |
-| 10GiB | Loki                        | `loki`     |
+Note each workload's instance name and recovery point ID for the next step.
 
-> The two 8GiB disks are both Bitnami PostgreSQL and cannot be distinguished by
-> size alone. After restoring one, mount it to inspect (step 7) — **PostgreSQL**
-> contains `PG_VERSION`, `base/`, `global/`; **Keycloak** contains a `keycloak`
-> database in `base/`.
+- **Several instances for one PVC** means the PVC was recreated at some point,
+  each time with a new disk (above, `fider/fider-db-1` has two).
+  - If the old disk was deleted, its instance stopped getting recovery points
+    at that moment. Pick the instance whose latest recovery point is from just
+    before the data loss.
+  - If the old disk still exists (its PV was `Retain`), both instances keep
+    getting recovery points. Find the disk that held the data with
+    `kubectl get pv` (look for a `Released` PV with this claim) or
+    `az disk list -g MC_equalvote_equalvote_westus2 --query "[?diskState=='Unattached'].name"`.
+    You may not need a restore at all: skip step 5 and use that disk directly
+    in step 7.
+- **`<no label>`** means the disk was dropped from the list before it became
+  append-only on 2026-10-30, or it had no CSI tags. Search the file's history
+  (`git log -S <uuid> -p -- tagged-disks.auto.tfvars`), or restore it and
+  inspect its contents as described in the
+  [previous version of this doc](https://github.com/Equal-Vote/argocd/blob/4497bf552de5fdf28a5ad4d7ae2a783df27dee90/PVC-RESTORE.md#7-identify-which-restored-disk-belongs-to-which-workload).
 
-## 6. Restore a Disk from Snapshot
+## 5. Restore a Disk from Snapshot
 
-For each original disk, restore its latest recovery point to a new managed disk.
-The Data Protection API uses a two-step process: initialize the restore request
-JSON, then trigger the restore.
+For each workload, restore its recovery point to a new managed disk. The Data
+Protection API uses a two-step process: initialize the restore request JSON,
+then trigger the restore.
 
 ```bash
-INSTANCE="<original-disk-uuid-from-step-4>"
-RP_ID="<latest-rp-id-from-step-4>"
+INSTANCE="<instance-name-from-step-4>"
+RP_ID="<recovery-point-id-from-step-4>"
 RESTORED_NAME="${INSTANCE}-restored"
 
 # 1) Generate the restore request body
@@ -162,167 +155,33 @@ This creates a disk named `pvc-<uuid>-restored` in
 az disk show -g MC_equalvote_equalvote_westus2 -n "$RESTORED_NAME" --query provisioningState
 ```
 
-Repeat for each original disk (3 total).
+Repeat for each workload. The restored disk name tells you which workload it
+belongs to: it's the instance name from step 4.
 
-## 7. Identify Which Restored Disk Belongs to Which Workload
-
-Mount the disk read-only with a busybox pod and inspect its content without
-writing anything.
-
-**Loki (10GiB):** contains `chunks/`, `index/`, `wal/` directories — just `ls`:
+## 6. Delete Current PVCs and Their PVs
 
 ```bash
-RESTORED_DISK="<loki-restored-disk-name>"
-
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv-inspect
-spec:
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: ""
-  csi:
-    driver: disk.csi.azure.com
-    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/${RESTORED_DISK}
-    fsType: ext4
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pvc-inspect
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
-  volumeName: pv-inspect
-  storageClassName: ""
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pg-inspect
-spec:
-  volumes:
-    - name: data
-      persistentVolumeClaim:
-        claimName: pvc-inspect
-        readOnly: true
-  containers:
-    - name: inspect
-      image: busybox
-      command: ["ls", "/data"]
-      volumeMounts:
-        - name: data
-          mountPath: /data
-          readOnly: true
-  restartPolicy: Never
-EOF
-
-kubectl logs pg-inspect
-kubectl delete pod,pvc,pv pg-inspect pvc-inspect pv-inspect
-```
-
-**PostgreSQL (8GiB):** both disks have the same directory layout, but the
-database names are embedded in the `pg_database` catalog file (`global/1260`).
-Use `strings` — no server startup, no writes:
-
-```bash
-RESTORED_DISK="<postgres-restored-disk-name>"
-
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv-inspect
-spec:
-  capacity:
-    storage: 8Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: ""
-  csi:
-    driver: disk.csi.azure.com
-    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/${RESTORED_DISK}
-    fsType: ext4
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pvc-inspect
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 8Gi
-  volumeName: pv-inspect
-  storageClassName: ""
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: pg-inspect
-spec:
-  volumes:
-    - name: data
-      persistentVolumeClaim:
-        claimName: pvc-inspect
-        readOnly: true
-  containers:
-    - name: inspect
-      image: busybox
-      command:
-        - sh
-        - -c
-        - strings /data/global/1260 | grep -v '^[0-9]*$' | sort -u
-      volumeMounts:
-        - name: data
-          mountPath: /data
-          readOnly: true
-  restartPolicy: Never
-EOF
-
-kubectl logs pg-inspect
-kubectl delete pod,pvc,pv pg-inspect pvc-inspect pv-inspect
-```
-
-Identify each disk from the output:
-
-| `strings` output contains | This disk belongs to             |
-| ------------------------- | -------------------------------- |
-| `starvote`                | PostgreSQL (`starvote`)          |
-| `bitnami_keycloak`        | Keycloak PostgreSQL (`keycloak`) |
-
-Repeat for the other 8GiB disk.
-
-## 8. Delete Current PVCs and Their Empty Disks
-
-For each workload, delete the current PVC (which cascades to delete the empty
-Azure disk — the CSI driver's default reclaim policy is Delete):
-
-```bash
-# Delete PVCs (this also deletes the empty Azure disks)
 kubectl delete pvc -n starvote data-postgresql-0
-kubectl delete pvc -n keycloak data-postgresql-0
-kubectl delete pvc -n loki data-loki-0
+kubectl delete pvc -n keycloak data-keycloak-postgresql-0
+kubectl delete pvc -n loki storage-loki-0
 
-# Delete the orphaned PVs that were bound to those PVCs
 kubectl delete pv <pv-name-from-step-3>     # starvote postgresql
 kubectl delete pv <pv-name-from-step-3>     # keycloak postgresql
 kubectl delete pv <pv-name-from-step-3>     # loki
 ```
 
-> Confirm the empty Azure disks are gone: `az disk list -g MC_equalvote_equalvote_westus2 --query "[].name" -o table`
+Whether the empty Azure disks go too depends on each PV's reclaim policy:
+`Delete` removes the disk, `Retain` (the `managed-csi-retain` class, or a PV
+patched to `Retain`) keeps it. Once the restore is verified, delete any empty
+disks that are left. For dynamically provisioned PVs the disk has the same
+name as the PV:
 
-## 9. Create New PVs Backed by Restored Disks
+```bash
+az disk list -g MC_equalvote_equalvote_westus2 --query "[?diskState=='Unattached'].name" -o table
+az disk delete -g MC_equalvote_equalvote_westus2 -n <pv-name-from-step-3>
+```
+
+## 7. Create New PVs Backed by Restored Disks
 
 **PostgreSQL (starvote):**
 
@@ -340,7 +199,7 @@ spec:
   storageClassName: ""
   csi:
     driver: disk.csi.azure.com
-    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-uuid-for-postgresql>
+    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-name-for-postgresql>
     fsType: ext4
 ---
 apiVersion: v1
@@ -374,13 +233,13 @@ spec:
   storageClassName: ""
   csi:
     driver: disk.csi.azure.com
-    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-uuid-for-keycloak>
+    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-name-for-keycloak>
     fsType: ext4
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-postgresql-0
+  name: data-keycloak-postgresql-0
   namespace: keycloak
 spec:
   accessModes:
@@ -408,13 +267,13 @@ spec:
   storageClassName: ""
   csi:
     driver: disk.csi.azure.com
-    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-uuid-for-loki>
+    volumeHandle: /subscriptions/86f3145a-48cc-4255-8757-dd3104d15e57/resourceGroups/MC_equalvote_equalvote_westus2/providers/Microsoft.Compute/disks/<restored-disk-name-for-loki>
     fsType: ext4
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-loki-0
+  name: storage-loki-0
   namespace: loki
 spec:
   accessModes:
@@ -432,7 +291,7 @@ Apply them:
 kubectl apply -f restored-pvcs.yaml
 ```
 
-## 10. Scale Workloads Back Up
+## 8. Scale Workloads Back Up
 
 ```bash
 kubectl scale statefulset -n starvote postgresql --replicas=1
@@ -448,7 +307,7 @@ kubectl logs -n keycloak keycloak-postgresql-0 --tail=20
 kubectl logs -n loki loki-0 --tail=20
 ```
 
-## 11. Re-enable ArgoCD Sync
+## 9. Re-enable ArgoCD Sync
 
 ```bash
 for APP in postgresql keycloak loki kube-prometheus-stack; do
@@ -467,5 +326,7 @@ done
   constraint to the PV.
 - **Reclaim policy.** The PV uses `Retain` to prevent accidental deletion.
 - **`storageClassName: ""`** on the PVC is required to bind to an existing PV.
-- **StatefulSet PVC naming.** Bitnami PostgreSQL creates PVCs named
-  `data-<release>-0`. Confirm the exact name with `kubectl get pvc -A`.
+- **StatefulSet PVC naming.** PVC names come from each chart's
+  `volumeClaimTemplates` (`data-postgresql-0`, `data-keycloak-postgresql-0`,
+  `storage-loki-0`). Confirm the exact names with `kubectl get pvc -A`; the
+  labels from step 4 show the names at the time the disk was created.
