@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+    - host: feedback.prod.equal.vote
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: fider
+                port:
+                  number: 3000
+  tls:
+    - secretName: fider-tls
+      hosts:
+        - feedback.prod.equal.vote

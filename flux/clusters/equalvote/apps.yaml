@@ -1,0 +1,30 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: apps
+  namespace: flux-system
+spec:
+  # Suspended on purpose. `flux bootstrap` must not start reconciling fider
+  # while ArgoCD still owns those objects -- two controllers server-side-applying
+  # the same resources fight over field ownership indefinitely. Resuming this is
+  # the cutover, and it happens only after the ArgoCD Applications are gone:
+  #
+  #   flux resume kustomization apps
+  #
+  # See flux/README.md, "Cutover".
+  suspend: true
+  interval: 10m
+  retryInterval: 1m
+  timeout: 10m
+  path: ./flux/apps
+  prune: true
+  wait: true
+  # Charts must resolve before any HelmRelease can install. This one dependency
+  # is the whole ordering model -- if sources isn't Ready, apps wait, and Flux
+  # re-evaluates every interval rather than pinning an FSM the way RollingSync
+  # does (see the step-2 wedge in AGENTS.md / PR #51).
+  dependsOn:
+    - name: sources
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
