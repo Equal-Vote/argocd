@@ -1,0 +1,14 @@
+# A self-contained replacement for the generic `devopscoop/charts/app` Helm
+# chart: the same four objects that chart renders, as plain manifests we own.
+#
+# The base is deliberately un-named -- every object is `app`, and an overlay
+# renames them and stamps `app.kubernetes.io/instance`. Keeping the shipped
+# label `app.kubernetes.io/name: app` is not cosmetic: it is half of the live
+# Deployment's selector, and selectors are immutable.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - serviceaccount.yaml
+  - service.yaml
+  - deployment.yaml
+  - ingress.yaml
