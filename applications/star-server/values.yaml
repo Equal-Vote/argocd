@@ -83,6 +83,17 @@ env:
       secretKeyRef:
         name: star-server
         key: AZURE_STORAGE_CONNECTION_STRING
+  # Key the backend will use to encrypt the voter-to-ballot link it stores on
+  # roll rows (electionRollDB.ballot_id), so the database and its backups hold
+  # only ciphertext. Nothing reads it yet. `optional: true` lets the pod start
+  # whether or not the key exists in the star-server secret, so this file and
+  # secrets/secrets.enc.yaml can merge in either order.
+  - name: BALLOT_LINK_ENCRYPTION_KEY
+    valueFrom:
+      secretKeyRef:
+        name: star-server
+        key: BALLOT_LINK_ENCRYPTION_KEY
+        optional: true
 service:
   port: 5000
 # 512Mi, up from 256Mi. Both replicas OOMKilled in the same second
