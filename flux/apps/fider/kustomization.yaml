@@ -1,0 +1,49 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: fider
+
+resources:
+  - ../../base/app
+  - ./helmrelease-fider-db.yaml
+
+# Stamps app.kubernetes.io/instance everywhere INCLUDING selectors, which is
+# what reproduces the live Deployment's immutable selector
+# {app.kubernetes.io/name: app, app.kubernetes.io/instance: fider}.
+labels:
+  - pairs:
+      app.kubernetes.io/instance: fider
+    includeSelectors: true
+
+images:
+  - name: app
+    newName: getfider/fider
+    newTag: stable
+
+# The base names every object `app`. Rename them, and fix the two
+# cross-references by hand (a JSON6902 name change does not propagate).
+patches:
+  - target: { kind: ServiceAccount, name: app }
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: fider
+  - target: { kind: Service, name: app }
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: fider
+  - target: { kind: Ingress, name: app }
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: fider
+  - target: { kind: Deployment, name: app }
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: fider
+      - op: replace
+        path: /spec/template/spec/serviceAccountName
+        value: fider
+  - path: ./patch-deployment.yaml
+  - path: ./patch-ingress.yaml
