@@ -9,6 +9,33 @@ controller:
   ingressClassResource:
     default: true
   replicaCount: 2
+
+  # Keep the two replicas on different nodes. Without this the scheduler placed
+  # both on aks-agentpool-...-vmss000000 (2026-11-24). With
+  # externalTrafficPolicy: Local the Azure load balancer only sends traffic to
+  # nodes that run a controller pod, so all ingress traffic entered through
+  # that one node, and losing it took down every site.
+  #
+  # - DoNotSchedule: a hard rule. The default scheduler spreading is only a
+  #   scoring preference, and resource fit outweighed it.
+  # - matchLabelKeys pod-template-hash: count only pods from the same
+  #   ReplicaSet, so during a rollout the surge pod can land on either node and
+  #   the new pods spread among themselves.
+  # - nodeTaintsPolicy Honor: a cordoned node (unschedulable taint) stops
+  #   counting as a domain, so draining one node can reschedule its replica
+  #   next to the other one instead of leaving it Pending.
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      nodeTaintsPolicy: Honor
+      matchLabelKeys:
+        - pod-template-hash
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: ingress-nginx
+          app.kubernetes.io/instance: ingress-nginx
+          app.kubernetes.io/component: controller
   # Steady state is ~70Mi after a restart, settling around ~90Mi within a day.
   # A config reload briefly runs old and new nginx workers side by side, so the
   # limit needs room above that plateau. 100Mi OOMKilled both replicas at once

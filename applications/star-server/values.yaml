@@ -109,3 +109,28 @@ livenessProbe:
 readinessProbe:
   httpGet:
     port: 5000
+
+# Keep the two replicas on different nodes. Without this the scheduler placed
+# both on aks-agentpool-...-vmss000001 (2026-11-24), so losing that one node
+# took bettervoting.com down even with two replicas.
+#
+# This chart has no topologySpreadConstraints, so this is a *required*
+# anti-affinity. With two replicas on two nodes that leaves no room for a surge
+# pod, so the rollout strategy below replaces pods one at a time instead:
+# maxSurge 0 means a deploy never needs 384Mi of spare request on a third slot
+# (a real constraint on these half-size nodes), and maxUnavailable 1 keeps one
+# replica serving throughout. The cost is that a deploy, or a node outage,
+# leaves one replica carrying all traffic until the other is Ready.
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/instance: star-server
+            app.kubernetes.io/name: app
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 1
