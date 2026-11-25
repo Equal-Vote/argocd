@@ -1,0 +1,16 @@
+{
+  "cluster": {
+    "name": "in-cluster",
+    "namespace": "keycloak"
+  },
+  "application": {
+    "name": "keycloak-operator",
+    "phase": "core",
+    "repoURL": "https://github.com/keycloak/keycloak-k8s-resources.git",
+    "path": "kubernetes",
+    "revision": "26.8.2"
+  },
+  "argocd": {
+    "project": "default"
+  }
+}

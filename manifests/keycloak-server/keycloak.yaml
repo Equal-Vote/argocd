@@ -1,0 +1,63 @@
+# Replaces the Bitnami keycloak chart (applications/keycloak). Named
+# keycloak-server, not keycloak, because the operator names its StatefulSet
+# after the CR and the Bitnami StatefulSet already holds `keycloak` until
+# cutover.
+#
+# Currently in the REHEARSAL configuration: a copy of the live database in
+# keycloak_rehearsal, served at keycloak-new.prod.equal.vote. The cutover
+# commit changes the four lines marked CUTOVER below.
+apiVersion: "k8s.keycloak.org/v2beta1"
+kind: "Keycloak"
+metadata:
+  name: "keycloak-server"
+spec:
+  # 0 until the live database has been restored into keycloak_rehearsal. At 1,
+  # Keycloak would find an empty database and create a fresh schema and master
+  # realm in it, which the restore would then collide with.
+  instances: 0
+
+  db:
+    vendor: "postgres"
+    host: "keycloak-db-rw"
+    database: "keycloak_rehearsal" # CUTOVER: keycloak
+    usernameSecret:
+      name: "keycloak-db-creds"
+      key: "username"
+    passwordSecret:
+      name: "keycloak-db-creds"
+      key: "password"
+
+  # TLS terminates at ingress-nginx, which forwards plain HTTP and sets
+  # X-Forwarded-*. This replaces the Bitnami chart's self-signed certificate
+  # and nginx `backend-protocol: HTTPS`.
+  http:
+    httpEnabled: true
+    # star-server calls http://keycloak.keycloak.svc.cluster.local/ (port 80),
+    # the Bitnami Service. Taking over that name at cutover means star-server
+    # needs no change. Until then the name is held by the Bitnami Service.
+    # CUTOVER: uncomment both lines.
+    # serviceName: "keycloak"
+    # serviceHttpPort: 80
+  proxy:
+    headers: "xforwarded"
+
+  hostname:
+    hostname: "https://keycloak-new.prod.equal.vote" # CUTOVER: https://keycloak.prod.equal.vote
+    # star-server's backend reaches Keycloak through the in-cluster Service,
+    # not the public hostname. Without this, Hostname v2 would build backchannel
+    # URLs (token, userinfo) from the public hostname.
+    backchannelDynamic: true
+
+  # Our own Ingress (ingress.yaml) instead, so the cutover can reuse the
+  # existing keycloak.prod.equal.vote-tls certificate and so the host swap is a
+  # one-line change in the same commit that removes the Bitnami Ingress.
+  ingress:
+    enabled: false
+
+  # Carried over from the Bitnami values: keycloak-0 was OOMKilled at 565Mi.
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "768Mi"
+    limits:
+      memory: "768Mi"

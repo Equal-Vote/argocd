@@ -1,0 +1,18 @@
+{
+  "cluster": {
+    "name": "in-cluster",
+    "namespace": "keycloak"
+  },
+  "application": {
+    "chartName": "cluster",
+    "chartURL": "https://cloudnative-pg.github.io/charts",
+    "name": "keycloak-db",
+    "phase": "post",
+    "revision": "0.8.1",
+    "valuesRevision": "HEAD",
+    "valuesURL": "https://github.com/Equal-Vote/argocd.git"
+  },
+  "argocd": {
+    "project": "default"
+  }
+}

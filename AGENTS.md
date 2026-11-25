@@ -22,17 +22,30 @@ kubectl apply -f application.yaml
 Every app carries a `phase` label from its `config.json`:
 
 - `initial` — cert-manager, ingress-nginx, external-dns
-- `core` — argocd, loki, fluent-bit, kube-prometheus-stack
-- `post` — keycloak, postgresql, star-server, alaska-rcv, discord-bot
+- `core` — argocd, loki, fluent-bit, kube-prometheus-stack, cnpg-operator, keycloak-operator
+- `post` — keycloak, keycloak-db, keycloak-server, postgresql, star-server, alaska-rcv, discord-bot, fider, fider-db
 
 These are for grouping and the ArgoCD UI. They **do not** order syncs. The
 RollingSync strategy that consumed them was removed: the only cross-app
-dependency in this cluster is cnpg-operator's CRDs before fider-db's
-`postgresql.cnpg.io` Cluster, and the template's `retry` policy covers that.
+dependencies in this cluster are operator CRDs before their custom resources
+(cnpg-operator before fider-db and keycloak-db, keycloak-operator before
+keycloak-server), and the template's `retry` policy covers those.
 Nothing else needs sync-time ordering — Ingresses, Certificates and database
 connections all resolve at runtime.
 
 Add a new app by creating `applications/<name>/config.json` + `values.yaml`. The ApplicationSet Git file generator picks it up automatically.
+
+Apps that are plain manifests or Kustomize instead of a Helm chart go in
+`manifests/<name>/config.json` (with `repoURL`, `path`, and `revision` in place of
+the chart fields), picked up by `applications/applicationset-manifests.yaml`. A
+source directory in this repo needs a `kustomization.yaml`, so that `config.json`
+is not applied as a manifest.
+
+The Keycloak migration from the Bitnami chart (`keycloak`) to the operator
+(`keycloak-operator`, `keycloak-db`, `keycloak-server`) is in progress; see
+Equal-Vote/bettervoting#1740. Until cutover both run side by side in the
+`keycloak` namespace, so **never delete that namespace** (for example via
+`matoMOVE.sh`).
 
 ## Enable / disable apps
 
