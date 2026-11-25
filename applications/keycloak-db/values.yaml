@@ -1,0 +1,43 @@
+# dyff between <(yq . <(helm show values cnpg/cluster --version 0.8.1)) <(yq eval '. * load("values.yaml")' <(helm show values cnpg/cluster --version 0.8.1))
+# vim -O <(helm show values cnpg/cluster --version 0.8.1) values.yaml
+
+# Replaces the bitnami/postgresql subchart bundled with the Bitnami keycloak
+# chart. Same major version (16) as the database it replaces, so pg_dump and
+# pg_restore move between them without a major-version upgrade.
+fullnameOverride: keycloak-db
+type: postgresql
+mode: standalone
+cluster:
+  instances: 1
+  # A single instance can never satisfy the operator's default PDB
+  # (minAvailable: 1), which would stall node drains and AKS upgrades. See the
+  # same setting in applications/fider-db/values.yaml.
+  enablePDB: false
+  storage:
+    # The Keycloak database is 16MB (measured 2026-11-24); this is headroom for
+    # retained WAL, not for data.
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 10m
+      memory: 256Mi
+    limits:
+      memory: 256Mi
+  initdb:
+    database: keycloak
+    owner: keycloak
+    # Credentials live in git (SOPS): secrets/keycloak-db-secrets.enc.yaml.
+    # The Keycloak CR reads the same secret. Only consulted at bootstrap.
+    secret:
+      name: keycloak-db-creds
+backups:
+  enabled: false
+
+# Scratch database for the migration rehearsal: a copy of the live Bitnami
+# database is restored here and the new Keycloak runs its 24 -> 26 schema
+# migration against it, leaving `keycloak` untouched for the real cutover.
+# Remove this entry after cutover; `delete` drops the database with it.
+databases:
+  - name: keycloak_rehearsal
+    owner: keycloak
+    databaseReclaimPolicy: delete

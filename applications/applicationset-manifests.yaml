@@ -1,0 +1,57 @@
+# Companion to applicationset.yaml for apps that are plain manifests or
+# Kustomize rather than a Helm chart plus values.yaml: the Keycloak operator
+# (upstream ships only manifests) and the Keycloak CR that it reconciles.
+#
+# Add an app by creating manifests/<name>/config.json. `repoURL`, `path`, and
+# `revision` name the source directory; when it is in this repo, put a
+# kustomization.yaml next to config.json and point `path` at that directory.
+# Kustomize only reads the files its kustomization lists, so config.json is
+# never mistaken for a manifest -- a plain directory source would try to apply it.
+#
+# The sync policy mirrors applicationset.yaml; see the comments there.
+apiVersion: "argoproj.io/v1alpha1"
+kind: "ApplicationSet"
+metadata:
+  name: "manifests"
+spec:
+  generators:
+    - git:
+        repoURL: "https://github.com/Equal-Vote/argocd.git"
+        revision: "HEAD"
+        files:
+          - path: "manifests/**/config.json"
+  template:
+    metadata:
+      name: "{{application.name}}"
+      labels:
+        phase: "{{application.phase}}"
+      annotations:
+        argocd.argoproj.io/compare-options: ServerSideDiff=true
+    spec:
+      project: "{{argocd.project}}"
+      source:
+        repoURL: "{{application.repoURL}}"
+        targetRevision: "{{application.revision}}"
+        path: "{{application.path}}"
+      destination:
+        name: "{{cluster.name}}"
+        namespace: "{{cluster.namespace}}"
+      syncPolicy:
+        automated:
+          selfHeal: true
+          prune: true
+        retry:
+          # Covers the Keycloak CR syncing before keycloak-operator has
+          # installed its CRD, the same way it covers cnpg-operator -> fider-db.
+          limit: 5
+          backoff:
+            duration: "15s"
+            factor: 2
+            maxDuration: "5m"
+        syncOptions:
+          - CreateNamespace=true
+          # Required here, not just consistent: the Keycloak CRD is ~520KB, far
+          # past the 262144-byte last-applied-configuration annotation limit
+          # that client-side apply hits.
+          - ServerSideApply=true
+          - PruneLast=true

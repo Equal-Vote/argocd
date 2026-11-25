@@ -1,0 +1,16 @@
+{
+  "cluster": {
+    "name": "in-cluster",
+    "namespace": "keycloak"
+  },
+  "application": {
+    "name": "keycloak-server",
+    "phase": "post",
+    "repoURL": "https://github.com/Equal-Vote/argocd.git",
+    "path": "manifests/keycloak-server",
+    "revision": "HEAD"
+  },
+  "argocd": {
+    "project": "default"
+  }
+}

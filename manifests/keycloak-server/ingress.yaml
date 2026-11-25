@@ -1,0 +1,27 @@
+apiVersion: "networking.k8s.io/v1"
+kind: "Ingress"
+metadata:
+  name: "keycloak-server"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: "nginx"
+  tls:
+    # CUTOVER: host and secretName both become keycloak.prod.equal.vote. The
+    # existing keycloak.prod.equal.vote-tls secret survives deletion of the
+    # Bitnami Ingress and its Certificate, so it is served at once.
+    - hosts:
+        - "keycloak-new.prod.equal.vote"
+      secretName: "keycloak-new.prod.equal.vote-tls"
+  rules:
+    - host: "keycloak-new.prod.equal.vote" # CUTOVER: keycloak.prod.equal.vote
+      http:
+        paths:
+          - path: "/"
+            pathType: "Prefix"
+            backend:
+              service:
+                # CUTOVER: keycloak, port 80 (see http.serviceName in keycloak.yaml)
+                name: "keycloak-server-service"
+                port:
+                  number: 8080
