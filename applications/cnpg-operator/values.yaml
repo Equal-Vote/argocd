@@ -1,2 +1,14 @@
 # dyff between <(yq . <(helm show values cnpg/cloudnative-pg --version 0.29.0)) <(yq eval '. * load("values.yaml")' <(helm show values cnpg/cloudnative-pg --version 0.29.0))
 # vim -O <(helm show values cnpg/cloudnative-pg --version 0.29.0) values.yaml
+
+# Without requests the operator was BestEffort: first evicted under node memory
+# pressure, which would stop reconciliation of every CNPG cluster (fider-db,
+# and keycloak-db once added). 10d peak working set 40Mi, measured 2026-11-24;
+# the headroom covers startup and a second managed cluster. Limit equals
+# request so it stays behind over-request pods in eviction order.
+resources:
+  requests:
+    cpu: 10m
+    memory: 128Mi
+  limits:
+    memory: 128Mi

@@ -26,24 +26,33 @@ serviceAccount:
   labels:
     azure.workload.identity/use: "true"
 
-# Commenting out for now to see if this is what's causing the deploy problem.
-# resources:
-#   requests:
-#     cpu: 10m
-#     memory: 100Mi
-#   limits:
-#     memory: 100Mi
-# cainjector:
-#   resources:
-#     requests:
-#       cpu: 10m
-#       memory: 100Mi
-#     limits:
-#       memory: 100Mi
-# webhook:
-#   resources:
-#     requests:
-#       cpu: 10m
-#       memory: 100Mi
-#     limits:
-#       memory: 100Mi
+# Without requests all three pods were BestEffort: first in line for eviction
+# under node memory pressure, and invisible to the scheduler, so the half-size
+# Standard_D2ps_v6 nodes were more committed than their allocated figures
+# showed. An earlier set of 100Mi values was commented out on 2026-04-04 while
+# troubleshooting a deploy loop; that loop was the startupapicheck job
+# (disabled above), not these.
+#
+# Sized from the 10d peak working set (all the history Prometheus keeps),
+# measured 2026-11-24: controller 40Mi, cainjector 40Mi, webhook 15Mi. Limit
+# equals request so these stay behind over-request pods in eviction order.
+resources:
+  requests:
+    cpu: 10m
+    memory: 96Mi
+  limits:
+    memory: 96Mi
+cainjector:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 96Mi
+    limits:
+      memory: 96Mi
+webhook:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 32Mi
